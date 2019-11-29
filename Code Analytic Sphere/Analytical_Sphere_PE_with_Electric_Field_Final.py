@@ -33,9 +33,9 @@ def sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N):
         rho = sqrt(sum(xq[K]**2))
         zenit = arccos(xq[K,2]/rho)
         azim  = arctan2(xq[K,1],xq[K,0])
-        
+
     print('rho: ', rho)
-    print('zenit: ', zenit)    
+    print('zenit: ', zenit)
     Matrix = zeros((2 * (N+1), 2 * (N+1)), float)
     for j in range(N+1):
         for n in range(N+1):
@@ -44,17 +44,23 @@ def sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N):
             if n == j:
                 Matrix[j, n] = R**(j) #Aj de eq. phi1 = phi2
                 Matrix[j + N+1, n + N+1] = (j+1)*(R**(-(j+2))) #Cj de eq. Ep_1*dphi1/dn = Ep_2*dphi2/dn
-        
+
     RHS = zeros(2 * (N+1))
     print('========================================================')
     print("Matriz: ")
     print(Matrix)
-    
-    RHS[0] =  -q[0]/(4*pi*Ep_1*R)
-    RHS[1] =  -EF*R
-    RHS[N+1] =   E_hat*q[0]/(4*pi*Ep_1*R*R)
-    RHS[N+2] =-EF
-    
+
+    for i in range(N+1):
+        RHS[i] = -(q[0]/(4*pi*Ep_1))*((rho**i)/(R**(i+1)))
+        RHS[N+1+i] = (q[0]/(4*pi*Ep_2))*((rho**i)/(R**(i+2)))*(i+1)
+        if i == 1:
+            RHS[i] = -EF*R -(q[0]/(4*pi*Ep_1))*((rho**i)/(R**(i+1)))
+            RHS[N+1+i] = -EF + (q[0]/(4*pi*Ep_2))*((rho**i)/(R**(i+2)))*(i+1)
+    #RHS[0] =  -q[0]/(4*pi*Ep_1*R)
+    #RHS[1] =  -EF*R
+    #RHS[N+1] =   E_hat*q[0]/(4*pi*Ep_1*R*R)
+    #RHS[N+2] =-EF
+
     print('========================================================')
     print('Lado Derecho: ')
     print(RHS)
@@ -64,30 +70,15 @@ def sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N):
     print(coeff)
 
     suma = 0
-    #Pn = zeros(N+1)
-    #CPL0=legendre(0)
-    #P0 = CPL0[0]
-    #CPL1=legendre(1)
-    #P1 = CPL1[1]*(cos(zenit))
-    #CPL2=legendre(2)
-    #P2 = CPL2[2]*((cos(zenit))**2) + CPL2[0]
-    #Pn[0]=P0
-    #Pn[1]=P1
-    #Pn[2]=P2
+
     print('========================================================')
-    #print('Usando Coeficientes de "special.legendre"')
-    print('P0: ', lpmv(0,0,cos(zenit)))
-    print('P1: ', lpmv(0,1,cos(zenit)))
-    print('P2: ', lpmv(0,2,cos(zenit)))
-    #print('Polinomios de Legendre: N=2', Pn)
-    print('========================================================')
-    
+
     suma_reac = 0.
     for s in range(N+1):
         suma += coeff[s]*(R**s)*lpmv(0,s,cos(zenit))#Pn[s]
         suma_reac += coeff[s]*(rho**s)*lpmv(0,s,cos(zenit))#Pn[0]
-        
-        
+
+
     print('========================================================')
     print("Solución Analitica: esfera con una carga puntual en el ")
     print("centro, sometida a un campo electrico uniforme externo.")
@@ -97,12 +88,12 @@ def sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N):
     PHI1 = suma + (q[0]/(4*pi*Ep_1*R))
     print('phi1(R): ', PHI1)
 #    print('========================================================')
-    
+
     suma1 = 0
     for c in range(N+1):
         suma1 += coeff[c+N+1]*(R**(-(c+1)))*lpmv(0,c,cos(zenit))
 
-    
+
 
 #    print('========================================================')
     PHI2 = suma1 - EF*R*lpmv(0,1,cos(zenit))
@@ -114,12 +105,12 @@ def sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N):
     Phi_coul = (q[0]/(4*pi*Ep_1*R))
     Phi_reac = Phi_total - Phi_coul
     print('Phi_reac: ', Phi_reac)
-    
+
     #print(coeff[0]*CC0*0.5)
-    
+
     CC0 = qe**2 * Na * 1e-3 * 1e10 / (cal2J * E_0)
     E_solv = 0.5*CC0*sum(q[0]*Phi_reac)
-    
+
     return E_solv
 
 N = 20
@@ -129,21 +120,9 @@ xq  = array([[0.,0.,2.]])
 R = 4.
 Ep_1 = 4.
 Ep_2 = 80.
-EF = 0.
+EF = 2.4
 
 E_solv = sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N)
 print('========================================================')
 print('Esolv: ', E_solv, ' kcal/mol')
 print('========================================================')
-
-#Solucion debe dar:
-# Sin Campo Electrico (EF):
-# Solucion analitica es Esolv = -9.8581  [kcal/mol] (segun codigo de github/barbagroup)
-# Con PyGBe ----> Esolv = -9.88 [kcal/mol]
-# Codigo BEMPP ---> Esolv = -9.8755 [kcal/mol]
-# Con este codigo, si EF = 0 ------------> Esolv =  0.518849502785  [kcal/mol] ... porque no da?? donde esta el error??
-
-#Por ejemplo: Con EF = 0.8
-# Codigo BEMPP ---> Esolv = -9.8256 [kcal/mol]
-# Este codigo  ---> Esolv = 0.518849452838 ....
-# No hay gran diferencia en el valor de Esolv en este codigo al variar EF... porque??

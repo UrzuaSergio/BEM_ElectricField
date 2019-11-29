@@ -64,7 +64,7 @@ def solution(q, xq, E_1, E_2, R, kappa, a, N):
     return E_P
 
 q   = array([1.])
-#xq  = array([[1.0,1.0,1.41421356]])
+#xq  = array([[0.,0.,2.]])
 xq  = array([[1e-12,1e-12,1e-12]])
 E_1 = 4.
 E_2 = 80.

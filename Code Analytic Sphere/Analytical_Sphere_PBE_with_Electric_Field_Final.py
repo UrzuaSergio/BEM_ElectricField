@@ -41,13 +41,12 @@ def sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N, kappa):
 
     index2 = arange(N + 2, dtype=float) + 0.5
     index = index2[0:-1]
-    print(index2)
-    
+
     K1 = special.kv(index2, kappa * R)
     K1p = index / (kappa * R) * K1[0:-1] - K1[1:]
     k1 = special.kv(index, kappa * R) * sqrt(pi / (2 * kappa * R))
     k1p = -sqrt(pi / 2) * 1 / (2 * (kappa * R)**(3 / 2.)) * special.kv(index, kappa * R) + sqrt(pi / (2 * kappa * R)) * K1p
-    
+
     Matrix = zeros((2 * (N+1), 2 * (N+1)), float)
     for j in range(N+1):
         for n in range(N+1):
@@ -127,7 +126,7 @@ R = 4.
 Ep_1 = 4.
 Ep_2 = 80.
 EF = 0.
-#kappa = 1e-12 
+#kappa = 1e-12
 kappa = 0.125
 
 E_solv = sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N, kappa)

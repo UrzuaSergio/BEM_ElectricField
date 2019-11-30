@@ -1,9 +1,10 @@
 from numpy import *
 from scipy import special
-from scipy.special import lpmv, legendre
+from scipy.special import lpmv, legendre, kv
 from scipy.misc import factorial
 
-def sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N):
+
+def sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N, kappa):
     """
     =====================================================================
     Inputs:
@@ -14,7 +15,8 @@ def sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N):
     Ep1  :  Float, Constante Dielectrica interior de esfera.
     Ep2  :  Float, Constante Dielectrica exterior de esfera.
     EF   :  Float, Valor de Campo Electrico.
-    N    :  Int, Numero de terminos en la Expansion Esferica Armonica.
+    N    :  Int  , Numero de terminos en la Expansion Esferica Armonica.
+    kappa:  Float, Inverso longitud de Debye (Según Concentración de Sal)
     =====================================================================
     Output
     =====================================================================
@@ -36,14 +38,24 @@ def sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N):
 
     print('rho: ', rho)
     print('zenit: ', zenit)
+
+    index2 = arange(N + 2, dtype=float) + 0.5
+    index = index2[0:-1]
+    print(index2)
+    
+    K1 = special.kv(index2, kappa * R)
+    K1p = index / (kappa * R) * K1[0:-1] - K1[1:]
+    k1 = special.kv(index, kappa * R) * sqrt(pi / (2 * kappa * R))
+    k1p = -sqrt(pi / 2) * 1 / (2 * (kappa * R)**(3 / 2.)) * special.kv(index, kappa * R) + sqrt(pi / (2 * kappa * R)) * K1p
+    
     Matrix = zeros((2 * (N+1), 2 * (N+1)), float)
     for j in range(N+1):
         for n in range(N+1):
-            Matrix[j, j + N+1] = - R**(-(j + 1)) #Cj de eq. phi1 = phi2
+            Matrix[j, j + N+1] = - k1[j] #aj de eq. phi1 = phi2
             Matrix[j + N+1, j] = E_hat*j*(R**(j-1)) #Aj de eq. Ep_1*dphi1/dn = Ep_2*dphi2/dn
             if n == j:
                 Matrix[j, n] = R**(j) #Aj de eq. phi1 = phi2
-                Matrix[j + N+1, n + N+1] = (j+1)*(R**(-(j+2))) #Cj de eq. Ep_1*dphi1/dn = Ep_2*dphi2/dn
+                Matrix[j + N+1, n + N+1] = - kappa*k1p[j] #aj de eq. Ep_1*dphi1/dn = Ep_2*dphi2/dn
 
     RHS = zeros(2 * (N+1))
     print('========================================================')
@@ -78,7 +90,6 @@ def sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N):
     print('========================================================')
     print("Solución Analitica: esfera con una carga electrica ")
     print("puntual, sometida a un campo electrico uniforme externo.")
-    
     print('========================================================')
     print('========================================================')
     print('Potencial en la Interfaz (r = R)')
@@ -88,9 +99,11 @@ def sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N):
 
     suma1 = 0
     for c in range(N+1):
-        suma1 += coeff[c+N+1]*(R**(-(c+1)))*lpmv(0,c,cos(zenit))
+        suma1 += coeff[c+N+1]*(k1[c])*lpmv(0,c,cos(zenit))
 
 
+
+#    print('========================================================')
     PHI2 = suma1 - EF*R*lpmv(0,1,cos(zenit))
     print('phi2(R): ', PHI2)
 
@@ -108,14 +121,16 @@ def sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N):
 
 N = 20
 q   = array([1.])
-xq  = array([[0.,0.,2.]])
-#xq  = array([[1e-12,1e-12,1e-12]])
+#xq  = array([[0.,0.,2.]])
+xq  = array([[1e-12,1e-12,1e-12]])
 R = 4.
 Ep_1 = 4.
 Ep_2 = 80.
-EF = 2.4
+EF = 0.
+#kappa = 1e-12 
+kappa = 0.125
 
-E_solv = sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N)
+E_solv = sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N, kappa)
 print('========================================================')
 print('Esolv: ', E_solv, ' kcal/mol')
 print('========================================================')

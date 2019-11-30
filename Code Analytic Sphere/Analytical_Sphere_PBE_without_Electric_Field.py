@@ -28,11 +28,11 @@ def solution(q, xq, E_1, E_2, R, kappa, a, N):
         rho = sqrt(sum(xq[K]**2))
         zenit = arccos(xq[K,2]/rho)
         azim  = arctan2(xq[K,1],xq[K,0])
-    
+
         phi = 0.+0.*1j
         for n in range(N):
             for m in range(-n,n+1):
-                
+
                 P1 = lpmv(abs(m),n,cos(zenit))
 
                 Enm = 0.
@@ -43,11 +43,11 @@ def solution(q, xq, E_1, E_2, R, kappa, a, N):
                     P2 = lpmv(abs(m),n,cos(zenit_k))
 
                     Enm += q[k]*rho_k**n*conjugate(special.sph_harm(m, n, azim_k, zenit_k))
-#               
+#
                 C2 = (kappa*a)**2*get_K(kappa*a,n-1)/(get_K(kappa*a,n+1) +
                         n*(E_2-E_1)/((n+1)*E_2+n*E_1)*(R/a)**(2*n+1)*(kappa*a)**2*get_K(kappa*a,n-1)/((2*n-1)*(2*n+1)))
                 C1 = Enm/(E_2*E_0*a**(2*n+1)) * (2*n+1)/(2*n-1) * (E_2/((n+1)*E_2+n*E_1))**2
-                
+
                 if n==0 and m==0:
                     Bnm = (real(Enm)/(E_0*R)*(1/E_2-1/E_1) - real(Enm)*kappa*a/(E_0*E_2*a*(1+kappa*a)))*4*pi/(2*n+1)
                 else:
@@ -56,11 +56,11 @@ def solution(q, xq, E_1, E_2, R, kappa, a, N):
                 phi += real(Bnm)*rho**n*special.sph_harm(m, n, azim, zenit)
 
         PHI[K] = real(phi)/(4*pi)
-        
+
     C0 = qe**2*Na*1e-3*1e10/(cal2J)
     CC0 = 1.
     E_P = 0.5*C0*sum(q*PHI)
-    
+
     return E_P
 
 q   = array([1.])
@@ -74,7 +74,7 @@ a   = 1.
 N   = 20
 
 print('================================================================')
-print("Solución Analitica: esfera con una carga puntual en el centro.")
+print("Solución Analitica Esfera Carga Puntual: Kirkwood 1934.")
 print('================================================================')
 print("Esolv: ", solution(q, xq, E_1, E_2, R, kappa, a, N)," [kcal/mol]")
 print('================================================================')

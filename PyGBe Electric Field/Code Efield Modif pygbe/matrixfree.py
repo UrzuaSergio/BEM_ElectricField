@@ -53,8 +53,8 @@ def selfInterior(surf, s, LorY, param, ind0, timing, kernel):
     K_diag = 2 * pi
     V_diag = 0
     IorE = 1
-    
-    if numpy.iscomplexobj(surf.XinK) or numpy.iscomplexobj(surf.XinV): 
+
+    if numpy.iscomplexobj(surf.XinK) or numpy.iscomplexobj(surf.XinV):
     #if surf.XinK.dtype == complex or surf.XinV.dtype == complex:
 
         K_lyr_Re, V_lyr_Re = project(surf.XinK.real, surf.XinV.real, LorY, surf,
@@ -109,7 +109,7 @@ def selfExterior(surf, s, LorY, param, ind0, timing, kernel):
     V_diag = 0.
     IorE = 2
 
-    if numpy.iscomplexobj(surf.XinK) or numpy.iscomplexobj(surf.XinV): 
+    if numpy.iscomplexobj(surf.XinK) or numpy.iscomplexobj(surf.XinV):
     #if surf.XinK.dtype == complex or surf.XinV.dtype == complex:
 
         K_lyr_Re, V_lyr_Re = project(surf.XinK.real, surf.XinV.real, LorY, surf,
@@ -166,7 +166,7 @@ def nonselfExterior(surf, src, tar, LorY, param, ind0, timing, kernel):
     V_diag = 0
     IorE = 1
 
-    if numpy.iscomplexobj(surf[src].XinK) or numpy.iscomplexobj(surf[src].XinV): 
+    if numpy.iscomplexobj(surf[src].XinK) or numpy.iscomplexobj(surf[src].XinV):
     #if surf[src].XinK.dtype == complex or surf[src].XinV.dtype == complex:
 
         K_lyr_Re, V_lyr_Re = project(surf[src].XinK.real, surf[src].XinV.real,
@@ -221,7 +221,7 @@ def nonselfInterior(surf, src, tar, LorY, param, ind0, timing, kernel):
     V_diag = 0
     IorE = 2
 
-    if numpy.iscomplexobj(surf[src].XinK) or numpy.iscomplexobj(surf[src].XinV): 
+    if numpy.iscomplexobj(surf[src].XinK) or numpy.iscomplexobj(surf[src].XinV):
     #if surf[src].XinK.dtype == complex or surf[src].XinV.dtype == complex:
 
         K_lyr_Re, V_lyr_Re = project(surf[src].XinK.real, surf[src].XinV.real,
@@ -578,15 +578,15 @@ def generateRHS(field_array, surf_array, param, kernel, timing, ind0, electric_f
                     F[s_start + s_size:s_start + 2 *
                       s_size] += aux * surf_array[s].Precond[2, :]
 
-	
+
         # Effect of an incomming electric field (only on outmost region) (LSPR problem)
-	# or Effect of applied an external electric field an macromolecule 
+	# or Effect of applied an external electric field an macromolecule
         # Assuming field comes in z direction
         LorY = field.LorY
 
         if len(field.parent) == 0 and abs(electric_field) > 1e-12:
 
-             for s in field.child:  # Loop over child surfaces 
+             for s in field.child:  # Loop over child surfaces
                 #Locate position of surface s in RHS
                 s_start = 0
                 for ss in range(s):
@@ -594,7 +594,7 @@ def generateRHS(field_array, surf_array, param, kernel, timing, ind0, electric_f
                             ss].surf_type == 'dirichlet_surface' or surf_array[
                                 ss].surf_type == 'neumann_surface' or surf_array[
                                     ss].surf_type == 'asc_surface':
-			
+
                         print('Surface definition error:')
                         print('Surf type can not be dirichlet, neumann or asc for LSPR problems')
 
@@ -609,26 +609,26 @@ def generateRHS(field_array, surf_array, param, kernel, timing, ind0, electric_f
                     print('LSPR problems required different surface definition')
                     print('Check the input files to correct this')
                     continue
-		    
+
                 else:
                     #Assuming field comes in z direction then
                     phi_field = -electric_field*tar.normal[:,2] #modificacion: cambio de signo
-		    
+
 
                     #The contribution is in the exterior equation
                     K_diag = -2 * pi
                     V_diag = 0
                     IorE   = 2
-		    	    
+
 
                     K_lyr, V_lyr = project(-electric_field*tar.zi,
                                             phi_field, LorY, tar, tar,
                                             K_diag, V_diag, IorE, s, param,
                                             ind0, timing, kernel)
 
-                    F[s_start:s_start + s_size] += (1 - K_lyr) * tar.Precond[1, :] + V_lyr * tar.Precond[1, :]
+                    F[s_start:s_start + s_size] += (- K_lyr) * tar.Precond[1, :] + V_lyr * tar.Precond[1, :]
 
-                    F[s_start+s_size:s_start+2*s_size] += (1 - K_lyr) * tar.Precond[3, :] + V_lyr * tar.Precond[3,:]
+                    F[s_start+s_size:s_start+2*s_size] += (- K_lyr) * tar.Precond[3, :] + V_lyr * tar.Precond[3,:]
 
 #   Dirichlet/Neumann contribution to RHS
 #    for field in field_array:
@@ -830,7 +830,7 @@ def generateRHS_gpu(field_array, surf_array, param, kernel, timing, ind0, electr
 
     if any([numpy.iscomplexobj(f.E) for f in field_array]):
         complex_diel = True
-    else: 
+    else:
         complex_diel = False
 
     # Initializing F dtype according to the problem we are solving.

@@ -588,6 +588,7 @@ def generateRHS(field_array, surf_array, param, kernel, timing, ind0, electric_f
 
              for s in field.child:  # Loop over child surfaces
                 #Locate position of surface s in RHS
+                param.kappa = field.kappa
                 s_start = 0
                 for ss in range(s):
                     if surf_array[

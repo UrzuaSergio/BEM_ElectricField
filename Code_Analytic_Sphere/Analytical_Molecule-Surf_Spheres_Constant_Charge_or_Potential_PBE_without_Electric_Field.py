@@ -120,7 +120,7 @@ def molecule_constant_charge(q, sigma02, r1, r2, R, kappa, E_1, E_2):
     C1 = q * 0.5
     C2 = 2 * pi * sigma02 * r2 * r2
     E_inter = C0 * (C1 * phi_inter + C2 * U_inter)
-    print(phi_h*C0*C1, phi_inf*C0*C1)
+    print(phi_h*C0*C1, U_h*C0*C2)
     
     return E_inter
 
@@ -238,6 +238,7 @@ def molecule_constant_potential(q, phi02, r1, r2, R, kappa, E_1, E_2):
     C1 = q * 0.5
     C2 = 2 * pi * kappa * phi02 * r2 * r2 * E_2
     E_inter = C0 * (C1 * phi_inter + C2 * U_inter)
+    print(phi_h*C0*C1, U_h*C0*C2)
 
     return E_inter
 

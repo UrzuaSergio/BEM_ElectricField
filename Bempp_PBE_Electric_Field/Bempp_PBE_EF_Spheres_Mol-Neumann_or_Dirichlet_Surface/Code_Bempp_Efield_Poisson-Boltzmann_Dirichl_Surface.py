@@ -16,7 +16,7 @@ print("La malla de la superficie tiene {0} elementos.".format(numero_de_elemento
 q, xq = np.array([]), np.empty((0,3))
 
 Ef = 0.
-sigma02 = 1.
+phi02 = 1.
 cte_dielec_in = 4.
 cte_dielec_ext = 80.
 #k = 0.0001
@@ -47,9 +47,9 @@ def Efield_DerPot(x, n, domain_index, result):
     global Ef
     result[:] = - Ef*n[2]
 
-def Sigma02(x, n, domain_index, result):
-    global sigma02, cte_dielec_ext
-    result[:] = sigma02/cte_dielec_ext
+def Phi02(x, n, domain_index, result):
+    global phi02
+    result[:] = phi02
 
 dirichl_space_1 = bempp.api.function_space(grid1, "DP", 0)
 neumann_space_1 = bempp.api.function_space(grid1, "DP", 0)
@@ -61,7 +61,7 @@ Efield_Pot_grid_fun_1 = bempp.api.GridFunction(neumann_space_1, fun=Efield_Pot)
 Efield_DerPot_grid_fun_1 = bempp.api.GridFunction(neumann_space_1, fun=Efield_DerPot)
 Efield_Pot_grid_fun_2 = bempp.api.GridFunction(neumann_space_2, fun=Efield_Pot)
 Efield_DerPot_grid_fun_2 = bempp.api.GridFunction(neumann_space_2, fun=Efield_DerPot)
-Sigma02_grid_fun = bempp.api.GridFunction(neumann_space_2, fun=Sigma02)
+Phi02_grid_fun = bempp.api.GridFunction(neumann_space_2, fun=Phi02)
 
 from bempp.api.operators.boundary import sparse, laplace, modified_helmholtz
 identity_11 = sparse.identity(dirichl_space_1, dirichl_space_1, dirichl_space_1)
@@ -83,8 +83,8 @@ dlp_Y_22 = modified_helmholtz.double_layer(dirichl_space_2, dirichl_space_2, dir
 
 #Lado derecho de la ecuacion de Poisson-Boltzmann Modificada con Campo Electrico
 
-rhsEf_out_1 = slp_Y_12*(Sigma02_grid_fun)
-rhsEf_out_2 = slp_Y_22*(Sigma02_grid_fun)
+rhsEf_out_1 = dlp_Y_12*(Phi02_grid_fun)
+rhsEf_out_2 = -(0.5*identity_22 - dlp_Y_22)*(Phi02_grid_fun)
 
 #matriz
 
@@ -93,10 +93,10 @@ blocked[0, 0] = 0.5*identity_11 + dlp_L_11
 blocked[0, 1] = -slp_L_11
 blocked[1, 0] = 0.5*identity_11 - dlp_Y_11
 blocked[1, 1] = (cte_dielec_in/cte_dielec_ext)*slp_Y_11
-blocked[1, 2] = - dlp_Y_12
+blocked[1, 2] =  slp_Y_12
 blocked[2, 0] =  - dlp_Y_21
 blocked[2, 1] = (cte_dielec_in/cte_dielec_ext)*slp_Y_21
-blocked[2, 2] = 0.5*identity_22 -dlp_Y_22
+blocked[2, 2] = slp_Y_22
 
 
 sol, info, it_count = bempp.api.linalg.gmres(blocked, [charged_grid_fun_1, rhsEf_out_1, rhsEf_out_2], use_strong_form=True, return_iteration_count=True, tol=1e-5)

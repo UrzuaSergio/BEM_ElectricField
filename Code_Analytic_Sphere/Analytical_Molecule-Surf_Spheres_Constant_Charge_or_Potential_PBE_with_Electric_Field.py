@@ -114,17 +114,16 @@ def molecule_constant_charge(q, sigma02, r1, r2, R, kappa, E_1, E_2):
     U_inf = b0_inf * k2[0]
     U_h = b0 * k2[0] + i2[0] * numpy.sum(a * B[:, 0])
     U_inter = U_h - U_inf
-    
+
 
     C0 = qe**2 * Na * 1e-3 * 1e10 / (cal2J * E_0)
     C1 = q * 0.5
     C2 = 2 * pi * sigma02 * r2 * r2
     E_inter = C0 * (C1 * phi_inter + C2 * U_inter)
-    print(phi_h*C0*C1, phi_inf*C0*C1)
-    
+
     return E_inter
 
-def molecule_constant_potential(q, phi02, r1, r2, R, kappa, E_1, E_2):
+def molecule_constant_potential(q, xq, phi02, Efield, r1, r2, R, kappa, E_1, E_2):
     """
     It computes the interaction energy between a molecule (sphere with
     point-charge in the center) and a sphere at constant potential, immersed
@@ -132,7 +131,9 @@ def molecule_constant_potential(q, phi02, r1, r2, R, kappa, E_1, E_2):
     Arguments
     ----------
     q      : float, number of qe to be asigned to the charge.
+    xk     : array, position of charge q. ##
     phi02  : float, constant potential on the surface of the sphere 2.
+    Efield : float, exteral uniform electric field.
     r1     : float, radius of sphere 1, i.e the molecule.
     r2     : float, radius of sphere 2.
     R      : float, distance center to center.
@@ -150,6 +151,9 @@ def molecule_constant_potential(q, phi02, r1, r2, R, kappa, E_1, E_2):
     Na = 6.0221415e23
     E_0 = 8.854187818e-12
     cal2J = 4.184
+
+    rho = numpy.sqrt(sum(xq[0]**2)) ##
+    zenit = numpy.arccos(xq[0,2]/rho) ##
 
     index2 = numpy.arange(N + 1, dtype=float) + 0.5
     index = index2[0:-1]
@@ -211,24 +215,48 @@ def molecule_constant_potential(q, phi02, r1, r2, R, kappa, E_1, E_2):
                 M[j + N, n + N] = 1
 
     RHS = numpy.zeros(2 * N)
-    RHS[0] = -E_hat * q / (4 * pi * E_1 * r1 * r1)
-    RHS[N] = phi02
+
+
+    for i in range(N):
+        RHS[i] = -E_hat * (q/(4*pi*E_1))*((rho**i)/(r1**(i+2)))*(2*i+1) ##
+        if i == 0:
+            RHS[N + i] = phi02 + Efield*R
+        if i == 1:
+            RHS[N + i] = Efield*r2
 
     coeff = linalg.solve(M, RHS)
 
     a = coeff[0:N] / (kappa * k1p - E_hat * numpy.arange(N) / r1 * k1)
     b = coeff[N:2 * N] / k2
 
-    a0 = a[0]
-    a0_inf = -E_hat * q / (4 * pi * E_1 * r1 * r1) * 1 / (kappa * k1p[0])
+    C = numpy.zeros(N)
+    for j in range(N):
+        C[j] = (a[j]*k1[j] + (2*j + 1)*numpy.sum(b * B[:,j])*i1[j] - (q/(4*pi*E_1))*((rho**j)/(r1**(j+1))))/(r1**j)
+        if j==1:
+            C[j] = (a[j]*k1[j] + (2*j + 1)*numpy.sum(b * B[:,j])*i1[j] - (q/(4*pi*E_1))*((rho**j)/(r1**(j+1))) - -Efield*r1)/(r1**j)
+    
+    a_inf = numpy.zeros(N)
+    for k in range(N):
+        a_inf[k] = - (E_hat*(q/(4*pi*E_1))*((rho**k)/(r1**(k+2)))*(2*k+1))/(kappa*k1p[k] - E_hat*(k/r1)*k1[k])
+        if k==1:
+            a_inf[k] = - ((E_hat*(q/(4*pi*E_1))*((rho**k)/(r1**(k+2)))*(2*k+1)) - Efield*(E_hat*k -1))/(kappa*k1p[k] - E_hat*(k/r1)*k1[k])
+            
+    CC_inf = numpy.zeros(N)
+    for j in range(N):
+        CC_inf[j] = (a_inf[j]*k1[j] - (q/(4*pi*E_1))*((rho**j)/(r1**(j+1))))/(r1**j)
+        if j==1:
+            CC_inf[j] = (a_inf[j]*k1[j] - (q/(4*pi*E_1))*((rho**j)/(r1**(j+1))) - -Efield*r1)/(r1**j)
+    
     b0 = b[0]
     b0_inf = phi02 / k2[0]
 
-    phi_inf = a0_inf * k1[0] - q / (4 * pi * E_1 * r1)
-    phi_h = a0 * k1[0] + i1[0] * numpy.sum(b * B[:, 0]) - q / (4 * pi * E_1 *
-                                                               r1)
+    phi_inf=0
+    phi_h = 0
+    for p in range(N):
+        phi_inf += CC_inf[p]*(rho**p)*special.lpmv(0,p,numpy.cos(zenit)) 
+        phi_h += C[p]*(rho**p)*special.lpmv(0,p,numpy.cos(zenit)) 
+              
     phi_inter = phi_h - phi_inf
-    
 
     U_inf = b0_inf * k2p[0]
     U_h = b0 * k2p[0] + i2p[0] * numpy.sum(a * B[:, 0])
@@ -246,8 +274,10 @@ E_0 = 8.854187818e-12
 #Pot_el = Pot*(qe)/((1e-10)*(E_0))
 
 q= 1
+xq  = numpy.array([[1e-12,1e-12, 1e-12]])
 sigma02 = 1. #(0.05 C/m^2)
 phi02 = 1.
+Efield = 0.0
 r1 = 4.
 r2 = 4.
 R = 12.
@@ -257,7 +287,7 @@ E_1 = 4.
 E_2 = 80.
 
 Energy_Mol_Surf_Cte_Charge = molecule_constant_charge(q, sigma02, r1, r2, R, kappa, E_1, E_2)
-Energy_Mol_Surf_Cte_Potential = molecule_constant_potential(q, phi02, r1, r2, R, kappa, E_1, E_2)
+Energy_Mol_Surf_Cte_Potential = molecule_constant_potential(q, xq, phi02, Efield, r1, r2, R, kappa, E_1, E_2)
 
 print('Mol - Surf Cte. Charge -- E_int: ', Energy_Mol_Surf_Cte_Charge, ' kcal/mol')
 print('Mol - Surf Cte. Potential -- E_int: ', Energy_Mol_Surf_Cte_Potential, ' kcal/mol')

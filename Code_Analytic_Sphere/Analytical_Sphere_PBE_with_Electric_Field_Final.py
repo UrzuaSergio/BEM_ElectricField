@@ -120,8 +120,8 @@ def sphere_with_Electric_Field(q, xq, R, Ep_1, Ep_2, EF, N, kappa):
 
 N = 20
 q   = array([1.])
-#xq  = array([[0.,0.,2.]])
-xq  = array([[1e-12,1e-12,1e-12]])
+xq  = array([[0.,0.,2.]])
+#xq  = array([[1e-12,1e-12,1e-12]])
 R = 4.
 Ep_1 = 4.
 Ep_2 = 80.

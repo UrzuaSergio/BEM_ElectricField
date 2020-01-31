@@ -118,9 +118,9 @@ def molecule_constant_charge(q, sigma02, r1, r2, R, kappa, E_1, E_2):
 
     C0 = qe**2 * Na * 1e-3 * 1e10 / (cal2J * E_0)
     C1 = q * 0.5
-    C2 = 2 * pi * sigma02 * r2 * r2
+    C2 = 2 * pi * sigma02 * r2 * r2 
     E_inter = C0 * (C1 * phi_inter + C2 * U_inter)
-    print(phi_h*C0*C1, U_h*C0*C2)
+    print("Const Charge: Esolv_Mol-Surf: ", phi_h*C0*C1," - Esurf_Mol-surf: ", U_h*C0*C2)
     
     return E_inter
 
@@ -238,7 +238,7 @@ def molecule_constant_potential(q, phi02, r1, r2, R, kappa, E_1, E_2):
     C1 = q * 0.5
     C2 = 2 * pi * kappa * phi02 * r2 * r2 * E_2
     E_inter = C0 * (C1 * phi_inter + C2 * U_inter)
-    print(phi_h*C0*C1, U_h*C0*C2)
+    print("Const Pot: Esolv_Mol-Surf: ",phi_h*C0*C1," -  Esurf_Mol-Surf: ", U_h*C0*C2)
 
     return E_inter
 
@@ -247,7 +247,7 @@ E_0 = 8.854187818e-12
 #Pot_el = Pot*(qe)/((1e-10)*(E_0))
 
 q= 1
-sigma02 = 1. #(0.05 C/m^2)
+sigma02 = 80. #(0.05 C/m^2)
 phi02 = 1.
 r1 = 4.
 r2 = 4.

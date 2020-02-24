@@ -11,7 +11,7 @@ numero_de_elementos_malla_1 = grid1.leaf_view.entity_count(0)
 numero_de_elementos_malla_2 = grid2.leaf_view.entity_count(0)
 print("La malla de la molecula tiene {0} elementos.".format(numero_de_elementos_malla_1))
 print("La malla de la superficie tiene {0} elementos.".format(numero_de_elementos_malla_2))
-
+elements = list(grid2.leaf_view.entity_iterator(0))
 
 q, xq = np.array([]), np.empty((0,3))
 
@@ -101,7 +101,7 @@ blocked[2, 2] = slp_Y_22
 
 sol, info, it_count = bempp.api.linalg.gmres(blocked, [charged_grid_fun_1, rhsEf_out_1, rhsEf_out_2], use_strong_form=True, return_iteration_count=True, tol=1e-5)
 print("El sistema lineal fue resuelto en {0} iteraciones".format(it_count))
-solution_dirichl_1, solution_neumann_1, solution_dirichl_2 = sol
+solution_dirichl_1, solution_neumann_1, solution_neumann_2 = sol
 
 #Calculo de Energia de Solvatacion
 
@@ -111,3 +111,21 @@ phi_q = slp_q*solution_neumann_1 - dlp_q*solution_dirichl_1
 
 Total_energy = 2*np.pi*332.064*np.sum(q*phi_q).real
 print("Esolv: {:7.4f} [kcal/mol]".format(Total_energy))
+
+#Calculo de Energia Superficial
+
+Area = np.zeros(numero_de_elementos_malla_2)
+for i in range(numero_de_elementos_malla_2):
+    Area[i] = elements[i].geometry.volume
+
+Aux = 0.
+for j in range(numero_de_elementos_malla_2):
+    Aux += - phi02*cte_dielec_ext*((solution_neumann_2.coefficients[j]).real)*Area[j]
+
+Esurf = Aux*2*np.pi*332.064
+print("Esurf: {:7.4f} [kcal/mol]".format(Esurf))
+
+print("Parametros: ")
+print("Kappa: {0} ".format(k))
+print("Electric Field: {0} ".format(Ef))
+print("Phi02: {0} ".format(phi02))

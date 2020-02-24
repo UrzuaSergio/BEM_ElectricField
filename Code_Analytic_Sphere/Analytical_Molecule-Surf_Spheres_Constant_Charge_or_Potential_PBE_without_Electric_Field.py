@@ -213,7 +213,7 @@ def molecule_constant_potential(q, phi02, r1, r2, R, kappa, E_1, E_2):
     RHS = numpy.zeros(2 * N)
     RHS[0] = -E_hat * q / (4 * pi * E_1 * r1 * r1)
     RHS[N] = phi02
-
+    print(RHS)
     coeff = linalg.solve(M, RHS)
 
     a = coeff[0:N] / (kappa * k1p - E_hat * numpy.arange(N) / r1 * k1)

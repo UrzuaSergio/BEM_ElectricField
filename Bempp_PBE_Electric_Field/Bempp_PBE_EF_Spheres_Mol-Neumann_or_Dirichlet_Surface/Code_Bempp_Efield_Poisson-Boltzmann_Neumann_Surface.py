@@ -11,12 +11,12 @@ numero_de_elementos_malla_1 = grid1.leaf_view.entity_count(0)
 numero_de_elementos_malla_2 = grid2.leaf_view.entity_count(0)
 print("La malla de la molecula tiene {0} elementos.".format(numero_de_elementos_malla_1))
 print("La malla de la superficie tiene {0} elementos.".format(numero_de_elementos_malla_2))
-
+elements = list(grid2.leaf_view.entity_iterator(0))
 
 q, xq = np.array([]), np.empty((0,3))
 
 Ef = 0.
-sigma02 = 1.
+sigma02 = 80.
 cte_dielec_in = 4.
 cte_dielec_ext = 80.
 #k = 0.0001
@@ -111,3 +111,24 @@ phi_q = slp_q*solution_neumann_1 - dlp_q*solution_dirichl_1
 
 Total_energy = 2*np.pi*332.064*np.sum(q*phi_q).real
 print("Esolv: {:7.4f} [kcal/mol]".format(Total_energy))
+
+#Calculo de Energia Superficial
+
+Area = np.zeros(numero_de_elementos_malla_2)
+for i in range(numero_de_elementos_malla_2):
+    Area[i] = elements[i].geometry.volume
+
+Aux = 0.
+for j in range(numero_de_elementos_malla_2):
+    Aux += sigma02*((solution_dirichl_2.coefficients[j]).real)*Area[j]
+    
+Esurf = Aux*2*np.pi*332.064
+print("Esurf: {:7.4f} [kcal/mol]".format(Esurf))
+
+print("Parametros: ")
+print("Kappa: {0} ".format(k))
+print("Electric Filed: {0} ".format(Ef))
+print("Sigma0: {0}  ".format(sigma02))
+
+
+

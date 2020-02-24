@@ -88,61 +88,49 @@ def molecule_constant_potential(q, xq, phi02, r1, r2, R, kappa, E_1, E_2):
             if n == j:
                 M[j, n] = 1
                 M[j + N, n + N] = 1
-                
-    
+
+
     RHS = numpy.zeros(2 * N)
-    #RHS[0] = -E_hat * q / (4 * pi * E_1 * r1 * r1)
-    #RHS[N] = phi02
-    
     rho = numpy.sqrt(sum(xq[0]**2)) ##
     zenit = numpy.arccos((xq[0,2])/rho) ##
-    print("========================================================================")
-    print("rho: ", rho)
-    print("zenit: ", zenit)
-    print("========================================================================")
-    
+
     for ss in range(N):
         RHS[ss] = -E_hat*((q)/(4*pi*E_1))*((rho**ss)/(r1**(ss+2)))*(2*ss + 1)
-    
+
     RHS[N] = phi02
-    
     coeff = linalg.solve(M, RHS)
 
     a = coeff[0:N] / (kappa * k1p - E_hat * numpy.arange(N) / r1 * k1)
     b = coeff[N:2 * N] / k2
-    
-    
+
     a0 = a[0]
     a0_inf = -E_hat * q / (4 * pi * E_1 * r1 * r1) * 1 / (kappa * k1p[0])
     b0 = b[0]
     b0_inf = phi02 / k2[0]
-    
+
     Cn = numpy.zeros(N)
     for jj in range(len(Cn)):
-        Cn[jj] = (a[jj] * k1[jj] + i1[jj] * (2*jj + 1) * numpy.sum(b * B[:, jj]) - (((q)/(4*pi*E_1))*((rho**jj)/(r1**(jj + 1)))))/(r1**jj) 
-    
-    print(Cn)
-    
+        Cn[jj] = (a[jj] * k1[jj]  + i1[jj] * (2*jj + 1) * numpy.sum(b * B[:,jj]) - (((q)/(4*pi*E_1))*((rho**jj)/(r1**(jj + 1)))))/(r1**jj)
+        #Cn[jj] /= r1**(2*jj) 
+
     a_inf = numpy.zeros(N)
     for k in range(N):
         a_inf[k] = - (E_hat*(q/(4*pi*E_1))*((rho**k)/(r1**(k+2)))*(2*k+1))/(kappa*k1p[k] - E_hat*(k/r1)*k1[k])
-           
+
     Cn_inf = numpy.zeros(N)
     for j in range(N):
         Cn_inf[j] = (a_inf[j]*k1[j] - (((q)/(4*pi*E_1))*((rho**j)/(r1**(j + 1)))))/(r1**j)
-    
+
     Aux_h = 0
     Aux_inf = 0
     for kk in range(N):
-        print(Cn[kk]*(rho**(kk))*special.lpmv(0,kk,numpy.cos(zenit)))
         Aux_h += Cn[kk]*(rho**(kk))*special.lpmv(0,kk,numpy.cos(zenit))
         Aux_inf += Cn_inf[kk]*(rho**(kk))*special.lpmv(0,kk,numpy.cos(zenit))
-    
+
     phi_inf = a0_inf * k1[0] - q / (4 * pi * E_1 * r1)
     phi_h = a0 * k1[0] + i1[0] * numpy.sum(b * B[:, 0]) - q / (4 * pi * E_1 *
                                                               r1)
     phi_inter = phi_h - phi_inf
-    
 
     U_inf = b0_inf * k2p[0]
     U_h = b0 * k2p[0] + i2p[0] * numpy.sum(a * B[:, 0])
@@ -153,15 +141,36 @@ def molecule_constant_potential(q, xq, phi02, r1, r2, R, kappa, E_1, E_2):
     C2 = 2 * pi * kappa * phi02 * r2 * r2 * E_2
     E_inter = C0 * (C1 * phi_inter + C2 * U_inter)
     print("========================================================================")
-    print("Esolv_h and Esolv_inf: ", phi_h, phi_inf*C0*C1)
-    print("Esolv_h* and Esolv_inf*: ", Aux_h, Aux_inf*C0*C1)
+    print("Esolv_h and Esolv_inf: ", phi_h*C0*C1, phi_inf*C0*C1)
+    print("Esolv_h* and Esolv_inf*: ", Aux_h*C0*C1, Aux_inf*C0*C1)
     print("========================================================================")
-
+    
+    #Evaluar potencial en r1.. phi1 y phi3 deben ser iguales en la interfaz 1
+    charge_pot = 0
+    phi_interfaz1 = 0
+    for j in range(N):
+        charge_pot += (q/(4*pi*E_1))*((rho**j)/(r1**(j+1)))*special.lpmv(0,j,numpy.cos(zenit))
+        phi_interfaz1 += Cn[j]*(r1**(j))*special.lpmv(0,j,numpy.cos(zenit))
+    
+    phi1_interfaz1 = charge_pot + phi_interfaz1    
+    print('phi1_interfaz_1: ', phi1_interfaz1)
+    
+    componente1_phi3 = 0
+    componente2_phi3 = 0
+    for n in range(N):
+        componente1_phi3 += a[n]*k1[n]*special.lpmv(0,n,numpy.cos(zenit))
+        for m in range(N):
+            componente2_phi3 += b[n]*(2*m + 1)*B[n,m]*i1[m]*special.lpmv(0,m,numpy.cos(zenit))
+                    
+    phi3_interfaz1 = componente1_phi3 + componente2_phi3
+    print('phi3_interfaz_1: ', phi3_interfaz1)
+    
+    
     return E_inter
 
-#qe = 1.60217646e-19
-#E_0 = 8.854187818e-12
+
 q= 1
+#xq = numpy.array([[1e-12,1e-12,1e-12]])
 xq = numpy.array([[1e-12,1e-12,2.0]])
 phi02 = 1.
 r1 = 4.

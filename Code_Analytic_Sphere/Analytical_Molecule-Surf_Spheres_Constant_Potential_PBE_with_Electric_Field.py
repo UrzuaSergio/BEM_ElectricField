@@ -4,7 +4,7 @@ from scipy import special, linalg
 from scipy.misc import factorial
 from math import gamma
 
-def molecule_constant_potential(q, xq, phi02, r1, r2, R, kappa, E_1, E_2):
+def molecule_constant_potential(q, xq, phi02, Efield, r1, r2, R, kappa, E_1, E_2):
     """
     It computes the interaction energy between a molecule (sphere with
     point-charge in the center) and a sphere at constant potential, immersed
@@ -23,7 +23,7 @@ def molecule_constant_potential(q, xq, phi02, r1, r2, R, kappa, E_1, E_2):
     --------
     E_inter: float, interaction energy.
     """
-
+    
     N = 20  # Number of terms in expansion
 
     qe = 1.60217646e-19
@@ -95,86 +95,94 @@ def molecule_constant_potential(q, xq, phi02, r1, r2, R, kappa, E_1, E_2):
     zenit = numpy.arccos((xq[0,2])/rho) ##
 
     for ss in range(N):
-        RHS[ss] = -E_hat*((q)/(4*pi*E_1))*((rho**ss)/(r1**(ss+2)))*(2*ss + 1)
-
-    RHS[N] = phi02
+        RHS[ss] = -E_hat*((q)/(4*pi*E_1))*((rho**ss)/(r1**(ss+2)))*(2*ss + 1) 
+        if ss == 1:
+            RHS[1] = -E_hat*((q)/(4*pi*E_1))*((rho**ss)/(r1**(ss+2)))*(2*ss + 1) - Efield*(E_hat*ss - 1)
+        
+    RHS[N] = phi02 + Efield*R
+    RHS[N+1] = Efield*r2
     coeff = linalg.solve(M, RHS)
 
     a = coeff[0:N] / (kappa * k1p - E_hat * numpy.arange(N) / r1 * k1)
     b = coeff[N:2 * N] / k2
 
-    a0 = a[0]
-    a0_inf = -E_hat * q / (4 * pi * E_1 * r1 * r1) * 1 / (kappa * k1p[0])
-    b0 = b[0]
-    b0_inf = phi02 / k2[0]
-
     Cn = numpy.zeros(N)
     for jj in range(len(Cn)):
         Cn[jj] = (a[jj] * k1[jj]  + i1[jj] * (2*jj + 1) * numpy.sum(b * B[:,jj]) - (((q)/(4*pi*E_1))*((rho**jj)/(r1**(jj + 1)))))/(r1**jj)
-        #Cn[jj] /= r1**(2*jj) 
+        if jj == 1:
+            Cn[jj] = (a[jj] * k1[jj]  + i1[jj] * (2*jj + 1) * numpy.sum(b * B[:,jj]) - Efield*r1 - (((q)/(4*pi*E_1))*((rho**jj)/(r1**(jj + 1)))))/(r1**jj)
+        
 
     a_inf = numpy.zeros(N)
     for k in range(N):
         a_inf[k] = - (E_hat*(q/(4*pi*E_1))*((rho**k)/(r1**(k+2)))*(2*k+1))/(kappa*k1p[k] - E_hat*(k/r1)*k1[k])
+        if k == 1:
+            a_inf[k] = - ((Efield)*(E_hat*k - 1) + (E_hat*(q/(4*pi*E_1))*((rho**k)/(r1**(k+2)))*(2*k+1)))/(kappa*k1p[k] - E_hat*(k/r1)*k1[k])
+        
 
     Cn_inf = numpy.zeros(N)
     for j in range(N):
         Cn_inf[j] = (a_inf[j]*k1[j] - (((q)/(4*pi*E_1))*((rho**j)/(r1**(j + 1)))))/(r1**j)
+        if j == 1:
+            Cn_inf[j] = (a_inf[j]*k1[j] - Efield*r1- (((q)/(4*pi*E_1))*((rho**j)/(r1**(j + 1)))))/(r1**j)
+        
 
-    Aux_h = 0
-    Aux_inf = 0
+    phi_solv_mol_surf = 0
+    phi_solv_mol_surf_inf = 0
     for kk in range(N):
-        Aux_h += Cn[kk]*(rho**(kk))*special.lpmv(0,kk,numpy.cos(zenit))
-        Aux_inf += Cn_inf[kk]*(rho**(kk))*special.lpmv(0,kk,numpy.cos(zenit))
+        phi_solv_mol_surf += Cn[kk]*(rho**(kk))*special.lpmv(0,kk,numpy.cos(zenit))
+        phi_solv_mol_surf_inf += Cn_inf[kk]*(rho**(kk))*special.lpmv(0,kk,numpy.cos(zenit))
 
-    phi_inf = a0_inf * k1[0] - q / (4 * pi * E_1 * r1)
-    phi_h = a0 * k1[0] + i1[0] * numpy.sum(b * B[:, 0]) - q / (4 * pi * E_1 *
-                                                              r1)
-    phi_inter = phi_h - phi_inf
+    Gp_comp1 = 0
+    Gp_comp2 = 0
+    for n in range(N):
+        Gp_comp1 += b[n]*k2p[n]*special.lpmv(0,n,numpy.cos(zenit))
+        for m in range(N):
+            Gp_comp2 += a[n]*(2*m + 1)*B[n,m]*i2p[m]*special.lpmv(0,m,numpy.cos(zenit))
 
-    U_inf = b0_inf * k2p[0]
-    U_h = b0 * k2p[0] + i2p[0] * numpy.sum(a * B[:, 0])
-    U_inter = U_h - U_inf
+    Gp = Gp_comp1 + Gp_comp2 - Efield*special.lpmv(0,1,numpy.cos(zenit))
 
     C0 = qe**2 * Na * 1e-3 * 1e10 / (cal2J * E_0)
     C1 = q * 0.5
     C2 = 2 * pi * kappa * phi02 * r2 * r2 * E_2
-    E_inter = C0 * (C1 * phi_inter + C2 * U_inter)
-    print("========================================================================")
-    print("Esolv_h and Esolv_inf: ", phi_h*C0*C1, phi_inf*C0*C1)
-    print("Esolv_h* and Esolv_inf*: ", Aux_h*C0*C1, Aux_inf*C0*C1)
-    print("========================================================================")
-    
+
+    phi_surf_mol_surf = Gp
+
+    Solv_Energy_h = phi_solv_mol_surf*C0*C1
+    Solv_Energy_inf = phi_solv_mol_surf_inf*C0*C1
+    Surf_Energy_h = phi_surf_mol_surf*C0*C2
+
     #Evaluar potencial en r1.. phi1 y phi3 deben ser iguales en la interfaz 1
-    charge_pot = 0
-    phi_interfaz1 = 0
-    for j in range(N):
-        charge_pot += (q/(4*pi*E_1))*((rho**j)/(r1**(j+1)))*special.lpmv(0,j,numpy.cos(zenit))
-        phi_interfaz1 += Cn[j]*(r1**(j))*special.lpmv(0,j,numpy.cos(zenit))
-    
-    phi1_interfaz1 = charge_pot + phi_interfaz1    
-    print('phi1_interfaz_1: ', phi1_interfaz1)
-    
-    componente1_phi3 = 0
-    componente2_phi3 = 0
-    for n in range(N):
-        componente1_phi3 += a[n]*k1[n]*special.lpmv(0,n,numpy.cos(zenit))
-        for m in range(N):
-            componente2_phi3 += b[n]*(2*m + 1)*B[n,m]*i1[m]*special.lpmv(0,m,numpy.cos(zenit))
-                    
-    phi3_interfaz1 = componente1_phi3 + componente2_phi3
-    print('phi3_interfaz_1: ', phi3_interfaz1)
-    
-    
-    return E_inter
+    #charge_pot = 0
+    #phi_interfaz1 = 0
+    #for j in range(N):
+        #charge_pot += (q/(4*pi*E_1))*((rho**j)/(r1**(j+1)))*special.lpmv(0,j,numpy.cos(zenit))
+        #phi_interfaz1 += Cn[j]*(r1**(j))*special.lpmv(0,j,numpy.cos(zenit))
+
+    #phi1_interfaz1 = charge_pot + phi_interfaz1
+    #print('phi1_interfaz_1: ', phi1_interfaz1)
+
+    #componente1_phi3 = 0
+    #componente2_phi3 = 0
+    #for n in range(N):
+        #componente1_phi3 += a[n]*k1[n]*special.lpmv(0,n,numpy.cos(zenit))
+        #for m in range(N):
+            #componente2_phi3 += b[n]*(2*m + 1)*B[n,m]*i1[m]*special.lpmv(0,m,numpy.cos(zenit))
+
+    #phi3_interfaz1 = componente1_phi3 + componente2_phi3
+    #print('phi3_interfaz_1: ', phi3_interfaz1)
+
+
+    return Solv_Energy_h, Solv_Energy_inf, Surf_Energy_h
 
 
 q= 1
+xq = numpy.array([[1e-12,1e-12,0.5]])
 #xq = numpy.array([[1e-12,1e-12,1e-12]])
-xq = numpy.array([[1e-12,1e-12,2.0]])
 phi02 = 1.
-r1 = 4.
-r2 = 4.
+Efield = 1.1053e-3
+r1 = 1.
+r2 = 1.
 R = 12.
 #kappa = 0.0000001
 kappa = 0.125
@@ -182,7 +190,10 @@ E_1 = 4.
 E_2 = 80.
 
 
-Energy_Mol_Surf_Cte_Potential = molecule_constant_potential(q, xq, phi02, r1, r2, R, kappa, E_1, E_2)
+Energy_Mol_Surf_Cte_Potential = molecule_constant_potential(q, xq, phi02, Efield, r1, r2, R, kappa, E_1, E_2)
 print("========================================================================")
-print('Mol - Surf Cte. Potential -- E_int: ', Energy_Mol_Surf_Cte_Potential, ' kcal/mol')
+print('Mol - Surf Cte. Potential -- Energy: ')
+print('Esolv Mol-Surf: ', Energy_Mol_Surf_Cte_Potential[0], ' kcal/mol')
+print('Esolv Mol Inf: ', Energy_Mol_Surf_Cte_Potential[1], ' kcal/mol')
+print('Esurf Mol-Surf: ', Energy_Mol_Surf_Cte_Potential[2], ' kcal/mol')
 print("========================================================================")

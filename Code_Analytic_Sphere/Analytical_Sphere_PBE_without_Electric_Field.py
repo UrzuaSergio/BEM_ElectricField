@@ -28,6 +28,7 @@ def solution(q, xq, E_1, E_2, R, kappa, a, N):
         rho = sqrt(sum(xq[K]**2))
         zenit = arccos(xq[K,2]/rho)
         azim  = arctan2(xq[K,1],xq[K,0])
+        
 
         phi = 0.+0.*1j
         for n in range(N):
@@ -63,9 +64,10 @@ def solution(q, xq, E_1, E_2, R, kappa, a, N):
 
     return E_P
 
-q   = array([1.])
-#xq  = array([[0.,0.,2.]])
-xq  = array([[1e-12,1e-12,1e-12]])
+q = array([1.])
+#q   = array([1., 0.])
+xq  = array([[0.,0.,2.]])
+#xq  = array([[1e-12,1e-12,0.5],[1e-12,1e-12,0.25]])
 E_1 = 4.
 E_2 = 80.
 R   = 4.

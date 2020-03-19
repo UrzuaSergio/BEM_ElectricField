@@ -58,7 +58,7 @@ def molecule_constant_potential_laplace_centered_charge(q, xq, phi02, r1, r2, R,
     C1 = q[0] * 0.5
     
     E_solv_mol_surf = phi_h*C0*C1
-    
+
     E_surf_mol_surf = - 2*pi*E_2*A0*phi02*r2*C0
         
     return E_solv_mol_surf, E_surf_mol_surf
@@ -115,8 +115,20 @@ def molecule_constant_potential_laplace_move_charge(q, xq, phi02, r1, r2, R, E_1
     C1 = q[0] * 0.5
     
     E_solv_mol_surf = phi_solv_mol_surf*C0*C1
+    
+    Gp_aux1 = 0.
+    Gp_aux2 = 0.
+    for n in range(N):
+        Gp_aux1 += - An[n]*((n + 1)/r2)*special.lpmv(0,n,numpy.cos(zenit))
+        for m in range(N):
+            Gp_aux2 += an[n]*((r1/R)**(n + 1))*((factorial(m + n))/((factorial(m))*(factorial(n))))*((-1)**m)*(m/r2)*((r2/R)**m)*special.lpmv(0,m,numpy.cos(zenit))
+            
+            
+    Gp = (Gp_aux1 + Gp_aux2)*(-1)*(E_2/phi02)
+
+    E_surf_mol_surf = -2*pi*(r2**2)*(phi02**2)*Gp*C0
                
-    return E_solv_mol_surf, M
+    return E_solv_mol_surf, E_surf_mol_surf
 
 q   = numpy.array([1.])
 xq  = numpy.array([[1e-12,1e-12,1e-12]])
@@ -137,3 +149,4 @@ print("===============================================")
 Energia2 = molecule_constant_potential_laplace_move_charge(q, xq_move, phi02, r1, r2, R, E_1, E_2)
 print("Caso: 'off center charge': ")
 print("E_solv_mol-surf: ", Energia2[0], "[kcal/mol]")
+print("E_surf_mol-surf: ", Energia2[1], "[kcal/mol]")

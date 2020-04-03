@@ -36,9 +36,12 @@ def molecule_constant_potential_laplace_centered_charge(q, xq, phi02, r1, r2, R,
                 M[j, n] = 1
                 M[j + N, n + N] = 1
 
+    
+
     RHS = numpy.zeros(2*N)
     RHS[0] = E_hat * q[0] / (4 * pi * E_1 * r1 * r1)
-    RHS[N] = phi02
+    RHS[N] = phi02 
+    
     coeff = linalg.solve(M, RHS)
     
     an = coeff[0:N] / ((1/r1)*((numpy.arange(N))*(E_hat + 1) + 1))
@@ -46,6 +49,7 @@ def molecule_constant_potential_laplace_centered_charge(q, xq, phi02, r1, r2, R,
 
     a0 = an[0]
     A0 = An[0]
+    
     
     SUMA = 0
     for n in range(N):
@@ -59,11 +63,13 @@ def molecule_constant_potential_laplace_centered_charge(q, xq, phi02, r1, r2, R,
     
     E_solv_mol_surf = phi_h*C0*C1
 
-    E_surf_mol_surf = - 2*pi*E_2*A0*phi02*r2*C0
+    Gp = (An[0]/r2)*(-1)*(E_2/phi02) 
+    E_surf_mol_surf =  2*pi*(r2**2)*(phi02**2)*Gp*C0
+    
         
     return E_solv_mol_surf, E_surf_mol_surf
 
-def molecule_constant_potential_laplace_move_charge(q, xq, phi02, r1, r2, R, E_1, E_2):
+def molecule_constant_potential_laplace_move_charge(q, xq, Efield, phi02, r1, r2, R, E_1, E_2):
     
     Param = 0.
     N = 20   
@@ -88,57 +94,57 @@ def molecule_constant_potential_laplace_move_charge(q, xq, phi02, r1, r2, R, E_1
             if n == j:
                 M[j, n] = 1
                 M[j + N, n + N] = 1
-                
+    
+            
     RHS = numpy.zeros(2*N)
     for j in range(N):
-        RHS[j] = E_hat*((q[0])/(4*pi*E_1))*(((rho**j))/(r1**(j+2)))*(2*j + 1)         
+        RHS[j] = E_hat*((q[0])/(4*pi*E_1))*(((rho**j))/(r1**(j+2)))*(2*j + 1)
+        
+    RHS[N] = phi02 
     
-    RHS[N] = phi02
     coeff = linalg.solve(M, RHS)
     
     an = coeff[0:N] / ((1/r1)*((numpy.arange(N))*(E_hat + 1) + 1))
     An = coeff[N:2 * N]
     
     Cj = numpy.zeros(N)
+    SUMj = numpy.zeros(N)
     for j in range(N):
         SUMA = 0
         for n in range(N):
             SUMA += An[n]*((r2/R)**(n + 1))*((-1)**n)*((factorial(j + n))/((factorial(j))*(factorial(n))))*((r1/R)**j)    
        
-        Cj[j] = an[j] + SUMA - ((q[0])/(4*pi*E_1))*(((rho**j))/(r1**(j + 1)))
-
+        SUMj[j] = SUMA
+        Cj[j] = an[j] + SUMj[j] - ((q[0])/(4*pi*E_1))*(((rho**j))/(r1**(j + 1)))
+        
     phi_solv_mol_surf = 0
     for n in range(N):
         phi_solv_mol_surf += Cj[n]*((rho/r1)**n)*special.lpmv(0,n,numpy.cos(zenit))
+       
         
     C0 = qe**2 * Na * 1e-3 * 1e10 / (cal2J * E_0)
     C1 = q[0] * 0.5
     
     E_solv_mol_surf = phi_solv_mol_surf*C0*C1
+           
+    Gp = (An[0]/r2)*(-1)*(E_2/phi02) 
     
-    Gp_aux1 = 0.
-    Gp_aux2 = 0.
-    for n in range(N):
-        Gp_aux1 += - An[n]*((n + 1)/r2)*special.lpmv(0,n,numpy.cos(zenit))
-        for m in range(N):
-            Gp_aux2 += an[n]*((r1/R)**(n + 1))*((factorial(m + n))/((factorial(m))*(factorial(n))))*((-1)**m)*(m/r2)*((r2/R)**m)*special.lpmv(0,m,numpy.cos(zenit))
-            
-            
-    Gp = (Gp_aux1 + Gp_aux2)*(-1)*(E_2/phi02)
 
-    E_surf_mol_surf = -2*pi*(r2**2)*(phi02**2)*Gp*C0
+    E_surf_mol_surf = 2*pi*(r2**2)*(phi02**2)*Gp*C0
                
     return E_solv_mol_surf, E_surf_mol_surf
 
 q   = numpy.array([1.])
-xq  = numpy.array([[1e-12,1e-12,1e-12]])
-xq_move = numpy.array([[1e-12,1e-12,2.0]])
+xq  = numpy.array([[0.0, 0.0, 1e-12]])
+xq_move = numpy.array([[0.0, 0.0, 2.0]])
 phi02 = 1.
 r1 = 4.
 r2 = 4.
 R = 12.
+#R = 1000000000.
 E_1 = 4.
 E_2 = 80.
+Efield = 0.8
 
 Energia = molecule_constant_potential_laplace_centered_charge(q, xq, phi02, r1, r2, R, E_1, E_2)
 print("===============================================")
@@ -146,7 +152,7 @@ print("Caso: 'centered charge': ")
 print("E_solv_mol-surf: ", Energia[0], "[kcal/mol]")
 print("E_surf_mol-surf: ", Energia[1], "[kcal/mol]")
 print("===============================================")
-Energia2 = molecule_constant_potential_laplace_move_charge(q, xq_move, phi02, r1, r2, R, E_1, E_2)
+Energia2 = molecule_constant_potential_laplace_move_charge(q, xq_move, Efield, phi02, r1, r2, R, E_1, E_2)
 print("Caso: 'off center charge': ")
 print("E_solv_mol-surf: ", Energia2[0], "[kcal/mol]")
 print("E_surf_mol-surf: ", Energia2[1], "[kcal/mol]")

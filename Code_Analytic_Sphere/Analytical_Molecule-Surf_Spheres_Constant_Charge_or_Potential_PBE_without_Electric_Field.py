@@ -120,7 +120,12 @@ def molecule_constant_charge(q, sigma02, r1, r2, R, kappa, E_1, E_2):
     C1 = q * 0.5
     C2 = 2 * pi * sigma02 * r2 * r2 
     E_inter = C0 * (C1 * phi_inter + C2 * U_inter)
-    print("Const Charge: Esolv_Mol-Surf: ", phi_h*C0*C1," - Esurf_Mol-surf: ", U_h*C0*C2)
+    
+    print("=============================================")
+    print("Caso: Superficie Carga Cte: " )
+    print("=============================================")
+    print("Esolv_Mol-Surf: ", phi_h*C0*C1)
+    print("Esurf_Mol-surf: ", U_h*C0*C2)
     
     return E_inter
 
@@ -212,8 +217,8 @@ def molecule_constant_potential(q, phi02, r1, r2, R, kappa, E_1, E_2):
 
     RHS = numpy.zeros(2 * N)
     RHS[0] = -E_hat * q / (4 * pi * E_1 * r1 * r1)
-    RHS[N] = phi02
-    print(RHS)
+    RHS[N] = phi02 
+
     coeff = linalg.solve(M, RHS)
 
     a = coeff[0:N] / (kappa * k1p - E_hat * numpy.arange(N) / r1 * k1)
@@ -225,20 +230,27 @@ def molecule_constant_potential(q, phi02, r1, r2, R, kappa, E_1, E_2):
     b0_inf = phi02 / k2[0]
 
     phi_inf = a0_inf * k1[0] - q / (4 * pi * E_1 * r1)
-    phi_h = a0 * k1[0] + i1[0] * numpy.sum(b * B[:, 0]) - q / (4 * pi * E_1 *
-                                                               r1)
+    phi_h = a0 * k1[0] + i1[0] * numpy.sum(b * B[:, 0]) - q / (4 * pi * E_1 *r1)
     phi_inter = phi_h - phi_inf
     
 
-    U_inf = b0_inf * k2p[0]
-    U_h = b0 * k2p[0] + i2p[0] * numpy.sum(a * B[:, 0])
+    U_inf = b0_inf * k2p[0] 
+    U_h = b0 * k2p[0] + i2p[0] * numpy.sum(a * B[:, 0]) #modif
     U_inter = U_h - U_inf
-
+    
     C0 = qe**2 * Na * 1e-3 * 1e10 / (cal2J * E_0)
     C1 = q * 0.5
     C2 = 2 * pi * kappa * phi02 * r2 * r2 * E_2
     E_inter = C0 * (C1 * phi_inter + C2 * U_inter)
-    print("Const Pot: Esolv_Mol-Surf: ",phi_h*C0*C1," -  Esurf_Mol-Surf: ", U_h*C0*C2)
+    
+    print(C2)
+    
+    print("=============================================")
+    print("Caso: Superficie Potencial Cte: " )
+    print("=============================================")
+    print("Esolv_Mol-Surf: ",phi_h*C0*C1, "[kcal/mol]")
+    print("Esurf_Mol-Surf: ", U_h*C0*C2, "[kcal/mol]")
+    
 
     return E_inter
 
@@ -260,5 +272,10 @@ E_2 = 80.
 Energy_Mol_Surf_Cte_Charge = molecule_constant_charge(q, sigma02, r1, r2, R, kappa, E_1, E_2)
 Energy_Mol_Surf_Cte_Potential = molecule_constant_potential(q, phi02, r1, r2, R, kappa, E_1, E_2)
 
-print('Mol - Surf Cte. Charge -- E_int: ', Energy_Mol_Surf_Cte_Charge, ' kcal/mol')
-print('Mol - Surf Cte. Potential -- E_int: ', Energy_Mol_Surf_Cte_Potential, ' kcal/mol')
+print("=============================================")
+print("=============================================")
+print('Eint_Mol-Surf Potential: ', Energy_Mol_Surf_Cte_Potential, ' kcal/mol')
+print("=============================================")
+print('Eint_Mol-Surf Charge: ', Energy_Mol_Surf_Cte_Charge, '[kcal/mol]')
+print("=============================================")
+

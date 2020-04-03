@@ -3,8 +3,8 @@ import numpy as np
 
 #Importacion de malla msh
 
-grid1 = bempp.api.import_grid('sphere_r4_gmsh0.25.msh')
-grid2 = bempp.api.import_grid('sphere_r4_d12_gmsh0.25.msh')
+grid1 = bempp.api.import_grid('sphere8K_R4.msh')
+grid2 = bempp.api.import_grid('sphere8K_R4_D12_v2.msh')
 
 
 numero_de_elementos_malla_1 = grid1.leaf_view.entity_count(0)
@@ -22,7 +22,7 @@ cte_dielec_ext = 80.
 #k = 0.0001
 k=0.125
 
-pqr_file = open('centered_charge.pqr','r').read().split('\n')
+pqr_file = open('move_charge.pqr','r').read().split('\n')
 for line in pqr_file:
     line=line.split()
     if len(line)==0 or line[0]!='ATOM': continue
@@ -83,7 +83,7 @@ dlp_Y_22 = modified_helmholtz.double_layer(dirichl_space_2, dirichl_space_2, dir
 
 #Lado derecho de la ecuacion de Poisson-Boltzmann Modificada con Campo Electrico
 
-rhsEf_out_1 = (0.5*identity_11 - dlp_Y_11)*Efield_Pot_grid_fun_1 + slp_Y_12*(Sigma02_grid_fun + Efield_DerPot_grid_fun_2)
+rhsEf_out_1 = (0.5*identity_11 - dlp_Y_11)*Efield_Pot_grid_fun_1 + slp_Y_12*(Sigma02_grid_fun + Efield_DerPot_grid_fun_2) + slp_Y_11*Efield_DerPot_grid_fun_1
 rhsEf_out_2 = -dlp_Y_21*Efield_Pot_grid_fun_1 + slp_Y_21*Efield_DerPot_grid_fun_1 + slp_Y_22*(Sigma02_grid_fun + Efield_DerPot_grid_fun_2)
 
 #matriz
@@ -120,7 +120,7 @@ for i in range(numero_de_elementos_malla_2):
 
 Aux = 0.
 for j in range(numero_de_elementos_malla_2):
-    Aux += sigma02*((solution_dirichl_2.coefficients[j]).real)*Area[j]
+    Aux += sigma02*((solution_dirichl_2.coefficients[j]).real + Efield_Pot_grid_fun_2.coefficients[j])*Area[j]
     
 Esurf = Aux*2*np.pi*332.064
 print("Esurf: {:7.4f} [kcal/mol]".format(Esurf))

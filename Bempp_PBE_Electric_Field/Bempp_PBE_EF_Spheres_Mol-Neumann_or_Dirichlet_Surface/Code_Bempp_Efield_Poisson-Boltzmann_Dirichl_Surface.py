@@ -3,8 +3,8 @@ import numpy as np
 
 #Importacion de malla msh
 
-grid1 = bempp.api.import_grid('sphere_r4_gmsh0.25.msh')
-grid2 = bempp.api.import_grid('sphere_r4_d12_gmsh0.25.msh')
+grid1 = bempp.api.import_grid('sphere8K_R4.msh')
+grid2 = bempp.api.import_grid('sphere8K_R4_D12_v2.msh')
 
 
 numero_de_elementos_malla_1 = grid1.leaf_view.entity_count(0)
@@ -22,7 +22,7 @@ cte_dielec_ext = 80.
 #k = 0.0001
 k=0.125
 
-pqr_file = open('centered_charge.pqr','r').read().split('\n')
+pqr_file = open('move_charge.pqr','r').read().split('\n')
 for line in pqr_file:
     line=line.split()
     if len(line)==0 or line[0]!='ATOM': continue
@@ -99,7 +99,7 @@ blocked[2, 1] = (cte_dielec_in/cte_dielec_ext)*slp_Y_21
 blocked[2, 2] = slp_Y_22
 
 
-sol, info, it_count = bempp.api.linalg.gmres(blocked, [charged_grid_fun_1, rhsEf_out_1, rhsEf_out_2], use_strong_form=True, return_iteration_count=True, tol=1e-5)
+sol, info, it_count = bempp.api.linalg.gmres(blocked, [charged_grid_fun_1, rhsEf_out_1, rhsEf_out_2], use_strong_form=True, return_iteration_count=True, tol=1e-7)
 print("El sistema lineal fue resuelto en {0} iteraciones".format(it_count))
 solution_dirichl_1, solution_neumann_1, solution_neumann_2 = sol
 
@@ -120,11 +120,11 @@ for i in range(numero_de_elementos_malla_2):
 
 Aux = 0.
 for j in range(numero_de_elementos_malla_2):
-    Aux += - phi02*cte_dielec_ext*((solution_neumann_2.coefficients[j]).real)*Area[j]
+    Aux += - phi02*cte_dielec_ext*((solution_neumann_2.coefficients[j]).real + Efield_DerPot_grid_fun_2.coefficients[j])*Area[j]
 
-Esurf = Aux*2*np.pi*332.064
+Esurf = -Aux*2*np.pi*332.064
+
 print("Esurf: {:7.4f} [kcal/mol]".format(Esurf))
-
 print("Parametros: ")
 print("Kappa: {0} ".format(k))
 print("Electric Field: {0} ".format(Ef))

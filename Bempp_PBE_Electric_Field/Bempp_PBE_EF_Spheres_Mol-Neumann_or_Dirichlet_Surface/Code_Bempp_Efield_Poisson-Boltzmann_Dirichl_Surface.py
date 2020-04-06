@@ -84,7 +84,7 @@ dlp_Y_22 = modified_helmholtz.double_layer(dirichl_space_2, dirichl_space_2, dir
 #Lado derecho de la ecuacion de Poisson-Boltzmann Modificada con Campo Electrico
 
 rhsEf_out_1 = dlp_Y_12*(Phi02_grid_fun) - dlp_Y_12*Efield_Pot_grid_fun_2 + (0.5*identity_11 - dlp_Y_11)*Efield_Pot_grid_fun_1 + slp_Y_11*Efield_DerPot_grid_fun_1
-rhsEf_out_2 = -(0.5*identity_22 - dlp_Y_22)*(Phi02_grid_fun) + (0.5*identity_22 - dlp_Y_22)*Efield_Pot_grid_fun_2 - dlp_Y_21*Efield_Pot_grid_fun_1 + slp_Y_21*Efield_Pot_grid_fun_1
+rhsEf_out_2 = -(0.5*identity_22 - dlp_Y_22)*(Phi02_grid_fun) + (0.5*identity_22 - dlp_Y_22)*Efield_Pot_grid_fun_2 - dlp_Y_21*Efield_Pot_grid_fun_1 + slp_Y_21*Efield_DerPot_grid_fun_1
 
 #matriz
 

@@ -19,13 +19,14 @@ import sys
 import numpy
 from triangulation import create_unit_sphere
 
-#rec = 6 #int(sys.argv[1])#8192
+#rec = 4 #512 
+rec = 6 #int(sys.argv[1])#8192
 #rec = 5 #2048
-rec = 7 #32768
+#rec = 7 #32768
 r = 4.00000000 #float(sys.argv[2])
 x0 = 0.00000000 #float(sys.argv[3])
 y0 = 0.00000000 #float(sys.argv[4])
-z0 = 14.00000000 #float(sys.argv[5])
+z0 = 0.00000000 #float(sys.argv[5])
 filename = "sphere_R4" #sys.argv[6]
 
 xc = numpy.array([x0,y0,z0])

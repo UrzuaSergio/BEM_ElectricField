@@ -3,8 +3,8 @@ import numpy as np
 
 #Importacion de malla msh
 
-grid1 = bempp.api.import_grid('sphere8K_R4.msh')
-grid2 = bempp.api.import_grid('sphere8K_R4_D12_v2.msh')
+grid1 = bempp.api.import_grid('sphere_r4_gmsh0.35.msh')
+grid2 = bempp.api.import_grid('sphere_r4_d14_gmsh0.35.msh')
 
 
 numero_de_elementos_malla_1 = grid1.leaf_view.entity_count(0)
@@ -121,7 +121,7 @@ for i in range(numero_de_elementos_malla_2):
 Aux = 0.
 for j in range(numero_de_elementos_malla_2):
     Aux += sigma02*((solution_dirichl_2.coefficients[j]).real + Efield_Pot_grid_fun_2.coefficients[j])*Area[j]
-    
+
 Esurf = Aux*2*np.pi*332.064
 print("Esurf: {:7.4f} [kcal/mol]".format(Esurf))
 
@@ -129,6 +129,3 @@ print("Parametros: ")
 print("Kappa: {0} ".format(k))
 print("Electric Filed: {0} ".format(Ef))
 print("Sigma0: {0}  ".format(sigma02))
-
-
-

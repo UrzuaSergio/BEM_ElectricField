@@ -3,8 +3,8 @@ import numpy as np
 
 #Importacion de malla msh
 
-grid1 = bempp.api.import_grid('sphere8K_R4.msh')
-grid2 = bempp.api.import_grid('sphere8K_R4_D12_v2.msh')
+grid1 = bempp.api.import_grid('sphere_r4_gmsh0.35.msh')
+grid2 = bempp.api.import_grid('sphere_r4_d14_gmsh0.35.msh')
 
 
 numero_de_elementos_malla_1 = grid1.leaf_view.entity_count(0)

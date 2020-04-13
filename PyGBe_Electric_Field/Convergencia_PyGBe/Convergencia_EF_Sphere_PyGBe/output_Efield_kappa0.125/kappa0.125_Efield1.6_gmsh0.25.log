@@ -1,0 +1,132 @@
+Run started on:
+	Date: 2020/4/12
+	Time: 16:40:55
+	PyGBe version: 0.3.2+5.gea0f875.dirty
+Config file: /opt/BEM_ElectricField/PyGBe_Electric_Field/Example_PyGBe_Electric_Field/sphere_with_Efield_pygbe/sphere_with_Efield_pygbe.config
+Parameter file: /opt/BEM_ElectricField/PyGBe_Electric_Field/Example_PyGBe_Electric_Field/sphere_with_Efield_pygbe/sphere_with_Efield_pygbe.param
+Geometry folder: /opt/BEM_ElectricField/PyGBe_Electric_Field/Example_PyGBe_Electric_Field/sphere_with_Efield_pygbe/geometry
+Running in: /opt/BEM_ElectricField/PyGBe_Electric_Field/Example_PyGBe_Electric_Field/sphere_with_Efield_pygbe
+
+Reading surface 0 from file mesh/sphere_r4_gmsh0.25
+Time load mesh: 0.1519303321838379
+Removed areas=0: 0
+
+Total elements : 4744
+Total equations: 9488
+Electric field: 1.6 e/(Ang^2 eps_0)
+----------------------------
+
+1 surfaces:
+
+Surface 0:
+	4744 elements
+	Surface type         : dielectric_interface
+	Cells                : 65
+	Twigs                : 56
+	Levels               : 3
+	C0 size              : 4.021957792364197
+	C0 box center        : 0.009427813921241543, -0.022965413328359014, -0.0041142131910226675
+	Twig cell size       : 1.0054894480910492
+	Rbox/theta           : 2.0109788961820985
+	Analytic distance    : 0.5776664227621487
+	Elem. per Ang^2      : 23.62753969195032
+	Max, min, avg elem.  : 0.08211787358004373, 0.001489529147416376, 0.04232349254462116
+	Total area           : 200.78264863168278
+------------------------------
+
+2 regions:
+
+Region 0:
+	Laplace or Yukawa: 2
+	kappa            : 0.125
+	dielectric const : 80.0
+	Number of charges: 0
+	Parent surface   : []
+	Child surfaces   : [0]
+Region 1:
+	Laplace or Yukawa: 1
+	kappa            : 1e-12
+	dielectric const : 4.0
+	Number of charges: 1
+	Parent surface   : [0]
+	Child surfaces   : []
+------------------------------
+
+Parameters:
+	Data type               : <class 'numpy.float64'>
+	Use GPU                 : 0
+	P                       : 15
+	threshold               : 0.50
+	theta                   : 0.50
+	NCRIT                   : 500
+	CUDA block size         : 128
+	Gauss points per element: 3
+	Gauss points near singlr: 19
+	1D Gauss points per side: 9
+	GMRES tolerance         : 1e-05
+	GMRES max iterations    : 1000
+	GMRES restart iteration : 200
+----------------------------
+
+Generate interaction list
+Transfer data to GPU
+Generate RHS
+List time          : 0.04303765296936035s
+Data transfer time : 1.6689300537109375e-06s
+RHS generation time: 2.702096462249756s
+------------------------------
+Total setup time   : 4.762109279632568s
+Solve
+Iteration: 1, relative residual: 0.10225112052093455
+Iteration: 2, relative residual: 0.061483420797400164
+Iteration: 3, relative residual: 0.04397369601326828
+Iteration: 4, relative residual: 0.024256280952599414
+Iteration: 5, relative residual: 0.012304672335929362
+Iteration: 6, relative residual: 0.0063769173540706645
+Iteration: 7, relative residual: 0.0038624445100096847
+Iteration: 8, relative residual: 0.002758404228898862
+Iteration: 9, relative residual: 0.0018582463165081936
+Iteration: 10, relative residual: 0.0009491684823016153
+Iteration: 11, relative residual: 0.0005394930751678351
+Iteration: 12, relative residual: 0.0003186619036543011
+Iteration: 13, relative residual: 0.00017972536292650893
+Iteration: 14, relative residual: 0.00010465292091411512
+Iteration: 15, relative residual: 7.069061136122791e-05
+Iteration: 16, relative residual: 4.723797799649829e-05
+Iteration: 17, relative residual: 3.266373490438477e-05
+Iteration: 18, relative residual: 1.9505916340802307e-05
+Iteration: 19, relative residual: 1.3016980122969749e-05
+Iteration: 20, relative residual: 1.0052954041454847e-05
+GMRES solve
+Converged after 21 iterations to a residual of 7.063803212067375e-06
+Time weight vector: 0.16153442382812497
+Time sort         : 0.0158662109375
+Time data transfer: 0.0
+Time P2M          : 5.171457275390624
+Time M2M          : 2.805509033203125
+Time M2P          : 56.73159074783325
+Time P2P          : 28.368632793426514
+	Time analy: 3.1808977127075195
+Solve time        : 90.61986970901489s
+
+Calculate Solvation Energy (E_solv)
+Calculating solvation energy for region 1, stored in E_solv[0]
+4080.0 of 4744 analytical integrals for phi_reac calculation in region 1
+Time E_solv: 0.262068510055542s
+Region 1: E_solv = -9551.681131541223 kcal/mol = -39964.23385436848 kJ/mol
+
+Calculate Surface Energy (E_surf)
+Time E_surf: 0.03937482833862305s
+
+Calculate Coulomb Energy (E_coul)
+Calculate Coulomb energy for region 1
+Region 1: E_coul = 0.0 kcal/mol = 0.0 kJ/mol
+Time E_coul: 0.0012054443359375s
+
+------------------------------
+Totals:
+E_solv = -9551.681131541223 kcal/mol
+E_surf = 0 kcal/mol
+E_coul = 0.0 kcal/mol
+
+Time = 95.7425000667572 s

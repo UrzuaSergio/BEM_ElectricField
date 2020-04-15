@@ -627,7 +627,7 @@ def generateRHS(field_array, surf_array, param, kernel, timing, ind0, electric_f
 
                         F[s_start+s_size:s_start+2*s_size] += (1 - tar.E_hat) * V_lyr * tar.Precond[3,:]
 
-                    else:
+                    if tar.surf_type == 'dielectric_interface' and len(field.child) == 1:
                         #Poisson-Boltzmann Equation with Electric Field
                         #Assuming field comes in z direction then
                         phi_field = -electric_field*tar.normal[:,2]
@@ -671,6 +671,7 @@ def generateRHS(field_array, surf_array, param, kernel, timing, ind0, electric_f
                 #               Effect of dirichlet surfaces
                 for sd in dirichlet:
                     K_diag = -2 * pi * (sd == s)
+                    K_diag_2 = -2 * pi * ((sd-1) == s)
                     V_diag = 0
                     IorE = 2
                     K_lyr, V_lyr = project(surf_array[sd].phi0,
@@ -678,6 +679,17 @@ def generateRHS(field_array, surf_array, param, kernel, timing, ind0, electric_f
                                            LorY, surf_array[sd], surf_array[s],
                                            K_diag, V_diag, IorE, sd, param,
                                            ind0, timing, kernel)
+
+                    K_lyr_EF_1, V_lyr_EF_1 = project(-electric_field*surf_array[sd].zi,
+                                                     numpy.zeros(len(surf_array[sd].zi)),
+                                                     LorY, surf_array[sd], surf_array[s],
+                                                     K_diag, V_diag, IorE, sd, param, ind0,
+                                                     timing, kernel)
+
+                    K_lyr_EF_2, V_lyr_EF_2 = project(-electric_field*surf_array[sd-1].zi,
+                                                     -electric_field*surf_array[sd-1].normal[:,2],
+                                                     LorY, surf_array[sd-1], surf_array[s], K_diag_2,
+                                                     V_diag, IorE, (sd-1), param, ind0, timing, kernel)
 
                     # Find location of surface s in RHS array
                     s_start = 0
@@ -701,16 +713,25 @@ def generateRHS(field_array, surf_array, param, kernel, timing, ind0, electric_f
                                 s].surf_type == 'neumann_surface' or surf_array[
                                     s].surf_type == 'asc_surface':
                         F[s_start:s_start + s_size] += K_lyr * surf_array[
+                            s].Precond[0, :] - K_lyr_EF_1 * surf_array[
+                            s].Precond[0, :] - K_lyr_EF_2 * surf_array[
+                            s].Precond[0, :] + V_lyr_EF_2 * surf_array[
                             s].Precond[0, :]
                     else:
                         F[s_start:s_start + s_size] += K_lyr * surf_array[
+                            s].Precond[1, :] - K_lyr_EF_1 * surf_array[
+                            s].Precond[1, :] - K_lyr_EF_2 * surf_array[
+                            s].Precond[1, :] + V_lyr_EF_2 * surf_array[
                             s].Precond[1, :]
                         F[s_start + s_size:s_start + 2 *
-                          s_size] += K_lyr * surf_array[s].Precond[3, :]
+                          s_size] += K_lyr * surf_array[s].Precond[3, :] - K_lyr_EF_1 * surf_array[
+                            s].Precond[3, :] - K_lyr_EF_2 * surf_array[
+                            s].Precond[3, :] + V_lyr_EF_2 * surf_array[s].Precond[3, :]
 
 #               Effect of neumann surfaces
                 for sn in neumann:
                     K_diag = 0
+                    K_diag_2 = -2 * pi * ((sn-1) == s)
                     V_diag = 0
                     IorE = 2
                     K_lyr, V_lyr = project(
@@ -718,6 +739,17 @@ def generateRHS(field_array, surf_array, param, kernel, timing, ind0, electric_f
                         surf_array[sn].phi0, LorY, surf_array[sn],
                         surf_array[s], K_diag, V_diag, IorE, sn, param, ind0,
                         timing, kernel)
+
+                    K_lyr_EF_1, V_lyr_EF_1 = project(numpy.zeros(len(surf_array[sn].zi)),
+                                                     -electric_field*surf_array[sn].normal[:,2],
+                                                     LorY, surf_array[sn], surf_array[s],
+                                                     K_diag, V_diag, IorE, sn, param, ind0,
+                                                     timing, kernel)
+
+                    K_lyr_EF_2, V_lyr_EF_2 = project(-electric_field*surf_array[sn-1].zi,
+                                                     -electric_field*surf_array[sn-1].normal[:,2],
+                                                     LorY, surf_array[sn-1], surf_array[s], K_diag_2,
+                                                     V_diag, IorE, (sn-1), param, ind0, timing, kernel)
 
                     # Find location of surface s in RHS array
                     s_start = 0
@@ -741,12 +773,22 @@ def generateRHS(field_array, surf_array, param, kernel, timing, ind0, electric_f
                                 s].surf_type == 'neumann_surface' or surf_array[
                                     s].surf_type == 'asc_surface':
                         F[s_start:s_start + s_size] += -V_lyr * surf_array[
+                            s].Precond[0, :] + V_lyr_EF_1 * surf_array[
+                            s].Precond[0, :] + V_lyr_EF_2 * surf_array[
+                            s].Precond[0, :] - K_lyr_EF_2 * surf_array[
                             s].Precond[0, :]
                     else:
                         F[s_start:s_start + s_size] += -V_lyr * surf_array[
+                            s].Precond[1, :] + V_lyr_EF_1 * surf_array[
+                            s].Precond[1, :] + V_lyr_EF_2 * surf_array[
+                            s].Precond[1, :] - K_lyr_EF_2 * surf_array[
                             s].Precond[1, :]
+
                         F[s_start + s_size:s_start + 2 *
-                          s_size] += -V_lyr * surf_array[s].Precond[3, :]
+                          s_size] += -V_lyr * surf_array[s].Precond[3, :] + V_lyr_EF_1 * surf_array[
+                            s].Precond[3, :] + V_lyr_EF_2 * surf_array[
+                            s].Precond[3, :] - K_lyr_EF_2 * surf_array[
+                            s].Precond[3, :]
 
 #           Now look at influence on PARENT surface
 #           The dirichlet/neumann surface will never be the parent,
@@ -1022,7 +1064,7 @@ def generateRHS_gpu(field_array, surf_array, param, kernel, timing, ind0, electr
         # Effect of an incomming electric field (only on outmost region)
         # Assuming field comes in z direction
         LorY = field.LorY
-        
+
         if len(field.parent) == 0 and abs(electric_field) > 1e-12:
              for s in field.child:  # Loop over child surfaces
                 #Locate position of surface s in RHS
@@ -1066,7 +1108,7 @@ def generateRHS_gpu(field_array, surf_array, param, kernel, timing, ind0, electr
                         F[s_start:s_start + s_size] += (1 - tar.E_hat) * V_lyr * tar.Precond[1, :]
                         F[s_start+s_size:s_start+2*s_size] += (1 - tar.E_hat) * V_lyr * tar.Precond[3,:]
 
-                    else:
+                    if tar.surf_type == 'dielectric_interface' and len(field.child) == 1::
                         #Poisson-Boltzmann Equation with Electric Field
                         #Assuming field comes in z direction then
                         phi_field = -electric_field*tar.normal[:,2]
@@ -1109,6 +1151,7 @@ def generateRHS_gpu(field_array, surf_array, param, kernel, timing, ind0, electr
                 #nEffect of dirichlet surfaces
                 for sd in dirichlet:
                     K_diag = -2 * pi * (sd == s)
+                    K_diag_2 = -2 * pi * ((sd-1) == s)
                     V_diag = 0
                     IorE = 2
                     K_lyr, V_lyr = project(surf_array[sd].phi0,
@@ -1116,6 +1159,17 @@ def generateRHS_gpu(field_array, surf_array, param, kernel, timing, ind0, electr
                                            LorY, surf_array[sd], surf_array[s],
                                            K_diag, V_diag, IorE, sd, param,
                                            ind0, timing, kernel)
+
+                    K_lyr_EF_1, V_lyr_EF_1 = project(-electric_field*surf_array[sd].zi,
+                                                     numpy.zeros(len(surf_array[sd].zi)),
+                                                     LorY, surf_array[sd], surf_array[s],
+                                                     K_diag, V_diag, IorE, sd, param, ind0,
+                                                     timing, kernel)
+
+                    K_lyr_EF_2, V_lyr_EF_2 = project(-electric_field*surf_array[sd-1].zi,
+                                                     -electric_field*surf_array[sd-1].normal[:,2],
+                                                     LorY, surf_array[sd-1], surf_array[s], K_diag_2,
+                                                     V_diag, IorE, (sd-1), param, ind0, timing, kernel)
 
                     # Find location of surface s in RHS array
                     s_start = locate_s_in_RHS(s, surf_array)
@@ -1128,14 +1182,25 @@ def generateRHS_gpu(field_array, surf_array, param, kernel, timing, ind0, electr
                     if surface.surf_type in ['dirichlet_surface',
                                              'neumann_surface',
                                              'asc_surface']:
-                        F[s_start:s_start + s_size] += K_lyr * surface.Precond[0, :]
+                        F[s_start:s_start + s_size] += K_lyr * surface.Precond[0, :] - K_lyr_EF_1 * surf_array[
+                                                                    s].Precond[0, :] - K_lyr_EF_2 * surf_array[
+                                                                    s].Precond[0, :] + V_lyr_EF_2 * surf_array[
+                                                                    s].Precond[0, :]
+
                     else:
-                        F[s_start:s_start + s_size] += K_lyr * surface.Precond[1, :]
-                        F[s_start + s_size:s_start + 2 * s_size] += K_lyr * surf_array[s].Precond[3, :]
+                        F[s_start:s_start + s_size] += K_lyr * surface.Precond[1, :] - K_lyr_EF_1 * surf_array[
+                                                                    s].Precond[1, :] - K_lyr_EF_2 * surf_array[
+                                                                    s].Precond[1, :] + V_lyr_EF_2 * surf_array[
+                                                                    s].Precond[1, :]
+
+                        F[s_start + s_size:s_start + 2 * s_size] += K_lyr * surf_array[s].Precond[3, :] - K_lyr_EF_1 * surf_array[
+                                                                    s].Precond[3, :] - K_lyr_EF_2 * surf_array[
+                                                                    s].Precond[3, :] + V_lyr_EF_2 * surf_array[s].Precond[3, :]
 
 #               Effect of neumann surfaces
                 for sn in neumann:
                     K_diag = 0
+                    K_diag_2 = -2 * pi * ((sn-1) == s)
                     V_diag = 0
                     IorE = 2
                     K_lyr, V_lyr = project(
@@ -1143,6 +1208,17 @@ def generateRHS_gpu(field_array, surf_array, param, kernel, timing, ind0, electr
                         surf_array[sn].phi0, LorY, surf_array[sn],
                         surf_array[s], K_diag, V_diag, IorE, sn, param, ind0,
                         timing, kernel)
+
+                    K_lyr_EF_1, V_lyr_EF_1 = project(numpy.zeros(len(surf_array[sn].zi)),
+                                                     -electric_field*surf_array[sn].normal[:,2],
+                                                     LorY, surf_array[sn], surf_array[s],
+                                                     K_diag, V_diag, IorE, sn, param, ind0,
+                                                     timing, kernel)
+
+                    K_lyr_EF_2, V_lyr_EF_2 = project(-electric_field*surf_array[sn-1].zi,
+                                                     -electric_field*surf_array[sn-1].normal[:,2],
+                                                     LorY, surf_array[sn-1], surf_array[s], K_diag_2,
+                                                     V_diag, IorE, (sn-1), param, ind0, timing, kernel)
 
                     # Find location of surface s in RHS array
                     s_start = locate_s_in_RHS(s, surf_array)
@@ -1155,11 +1231,22 @@ def generateRHS_gpu(field_array, surf_array, param, kernel, timing, ind0, electr
                     if surface.surf_type in ['dirichlet_surface',
                                              'neumann_surface',
                                              'asc_surface']:
-                        F[s_start:s_start + s_size] += -V_lyr * surface.Precond[0, :]
+                        F[s_start:s_start + s_size] += -V_lyr * surface.Precond[0, :]  + V_lyr_EF_1 * surf_array[
+                                                       s].Precond[0, :] + V_lyr_EF_2 * surf_array[
+                                                       s].Precond[0, :] - K_lyr_EF_2 * surf_array[
+                                                       s].Precond[0, :]
+
                     else:
-                        F[s_start:s_start + s_size] += -V_lyr * surface.Precond[1, :]
+                        F[s_start:s_start + s_size] += -V_lyr * surface.Precond[1, :] + V_lyr_EF_1 * surf_array[
+                                                       s].Precond[1, :] + V_lyr_EF_2 * surf_array[
+                                                       s].Precond[1, :] - K_lyr_EF_2 * surf_array[
+                                                       s].Precond[1, :]
+
                         F[s_start + s_size:s_start + 2 *
-                          s_size] += -V_lyr * surface.Precond[3, :]
+                          s_size] += -V_lyr * surface.Precond[3, :] + V_lyr_EF_1 * surf_array[
+                                                   s].Precond[3, :] + V_lyr_EF_2 * surf_array[
+                                                   s].Precond[3, :] - K_lyr_EF_2 * surf_array[
+                                                   s].Precond[3, :]
 
 #           Now look at influence on PARENT surface
 #           The dirichlet/neumann surface will never be the parent,

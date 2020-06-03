@@ -350,7 +350,7 @@ def read_electric_field(param, filename):
     ---------
     param        : class, parameters related to the surface.
     filename     : name of the file that contains the infromation of the incident
-                   electric field. (filname.config)
+                   or external electric field. (filname.config)
 
     Returns
     -------

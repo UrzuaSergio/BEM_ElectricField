@@ -177,7 +177,7 @@ def check_for_nvcc():
         )
         return False
 
-
+#modificacion
 def main(argv=sys.argv, log_output=True, return_output_fname=False,
          return_results_dict=False, field=None, electric_values=None):
     """
@@ -307,7 +307,7 @@ def main(argv=sys.argv, log_output=True, return_output_fname=False,
     param.Neq = 0
     for s in surf_array:
         N_aux = len(s.triangle)
-        param.N += N_aux        
+        param.N += N_aux
         if s.surf_type in ['dirichlet_surface', 'neumann_surface', 'asc_surface']:
             param.Neq += N_aux
         else:
@@ -353,7 +353,7 @@ def main(argv=sys.argv, log_output=True, return_output_fname=False,
     print('Generate RHS')
     tic = time.time()
     if param.GPU == 0:
-        F = generateRHS(field_array, surf_array, param, kernel, timing, ind0, electric_field)
+        F = generateRHS(field_array, surf_array, param, kernel, timing, ind0, electric_field) 
     elif param.GPU == 1:
         F = generateRHS_gpu(field_array, surf_array, param, kernel, timing,
                             ind0, electric_field)
@@ -371,7 +371,7 @@ def main(argv=sys.argv, log_output=True, return_output_fname=False,
     #   Check if there is a complex dielectric
     if any([numpy.iscomplexobj(f.E) for f in field_array]):
         complex_diel = True
-    else: 
+    else:
         complex_diel = False
 
     ### Solve
@@ -380,10 +380,10 @@ def main(argv=sys.argv, log_output=True, return_output_fname=False,
     print('Solve')
     # Initializing phi dtype according to the problem we are solving.
     if not complex_diel:
-        phi = numpy.zeros(param.Neq)    
+        phi = numpy.zeros(param.Neq)
     else:
         raise ValueError('Dielectric should be real for solvation energy problems')
-        
+
     phi, iteration = gmres_mgs(surf_array, field_array, phi, F, param, ind0,
                             timing, kernel)
     toc = time.time()
@@ -398,12 +398,7 @@ def main(argv=sys.argv, log_output=True, return_output_fname=False,
     # Put result phi in corresponding surfaces
     s_start = 0
     for surf in surf_array:
-        if abs(electric_field) > 1e-12:
-            phi_electric_field = -electric_field*surf.zi
-            derphi_electric_field = -electric_field*surf.normal[:,2]
-            s_start = surf.fill_phi(phi, s_start, phi_electric_field, derphi_electric_field)
-        else:
-            s_start = surf.fill_phi(phi, s_start)
+        s_start = surf.fill_phi(phi, s_start)
 
 
     # Calculate solvation energy
@@ -478,13 +473,13 @@ def main(argv=sys.argv, log_output=True, return_output_fname=False,
     with open(os.path.join(output_dir, output_pickle), 'wb') as f:
         pickle.dump(results_dict, f, 2)
 
-    try: 
+    try:
         with open(os.path.join(output_dir, output_pickle), 'rb') as f:
             pickle.load(f)
     except EOFError:
         print('Error writing the pickle file, the results will be unreadable')
-        pass     
-    
+        pass
+
     #reset stdout so regression tests, etc, don't get logged into the output
     #file that they themselves are trying to read
     if log_output:

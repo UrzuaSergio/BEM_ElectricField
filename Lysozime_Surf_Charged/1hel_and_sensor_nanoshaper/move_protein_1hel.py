@@ -189,7 +189,7 @@ if alpha_y>pi:
 
 if verbose:
     print('Desired configuration:')
-if abs(ctr[0])<1e-10 and abs(ctr[2])<1e-10:
+if abs(ctr[0])<1e-10 and abs(ctr[1])<1e-10:
     if verbose:
         print('\tProtein is centered, %f angs over the surface'%(min(vert_new[:,1])))
 else:

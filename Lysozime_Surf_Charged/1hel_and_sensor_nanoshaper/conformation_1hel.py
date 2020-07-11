@@ -62,11 +62,11 @@ def scanOutput(filename):
                 N = int(line[-1])
             if line[0]=='Totals:':
                 flag = 1 
-            if line[0]=='Esolv' and flag==1:
+            if line[0]=='E_solv' and flag==1:
                 Esolv = float(line[2])
-            if line[0]=='Esurf' and flag==1:
+            if line[0]=='E_surf' and flag==1:
                 Esurf = float(line[2])
-            if line[0]=='Ecoul' and flag==1:
+            if line[0]=='E_coul' and flag==1:
                 Ecoul = float(line[2])
             if line[0]=='Time' and flag==1:
                 Time = float(line[2])
@@ -118,11 +118,11 @@ for i in range(len(til_angles)):
     #mover proteina en distintos estados y generar archivos pqr y mesh. se guardan en carpeta PRINCIPAL Y EN mesh/ ----> ESTA BIEN
     name='_'+str(H)+'_'+str(tilt_begin)+'-'+str(tilt_end)
     
-    cmd_move = 'python move_protein.py ' + prot_file + ' ' + pqr_file + ' ' + str(int(rot_angles[i])) + ' ' + str(int(til_angles[i])) +' '+ str(H) + ' ' + name
+    cmd_move = 'python move_protein_1hel.py ' + prot_file + ' ' + pqr_file + ' ' + str(int(rot_angles[i])) + ' ' + str(int(til_angles[i])) +' '+ str(H) + ' ' + name
     os.system(cmd_move)
     
     #ejecutar pygbe
-    cmd_run = ' /user/s/surzua/bin/pygbe '+ Nombre_carpeta_principal +' -p' + param_file + ' -c' + config_file_moved +' > output_aux_' + output_file + name + ' --phi_filename phi_aux'+'_'+str(tilt_begin)+'-'+str(tilt_end)
+    cmd_run = ' /home/sergiourzua/bin/pygbe '+ Nombre_carpeta_principal +' -p' + param_file + ' -c' + config_file_moved +' > output_aux_' + output_file + name
     os.system(cmd_run)
 
     N_run, iterations_run, Esolv_run, Esurf_run, Ecoul_run, Time_run, files = scanOutput('output_aux_' + output_file + name)

@@ -107,11 +107,12 @@ def meshSurf(C, N, S, fix, normal):
 # Cube info
 sz  = [60., 60., 20.] # Cube size
 ctr = [0.,0.,-sz[2]/2]  # Cube center
-d = 16                   # Density :triangles per angstrom square. 
+d = 1                   # Density :triangles per angstrom square. 
 #d16: sensor 60x60x20: 115248 triangulos
 #d08: sensor 60x60x20: 58800 triangulos
 #d04: sensor 60x60x20: 28812 triangulos
 #d02: sensor 60x60x20: 14700 triangulos
+#d01: sensor 60x60x20: 7500 triangulos
 sqr_per_side = int(numpy.ceil(numpy.sqrt(sz[0]*sz[2]*d/2.)))
 avg_size = sz[0]/sqr_per_side
 sqr_per_side_y = int(sz[1]/avg_size)

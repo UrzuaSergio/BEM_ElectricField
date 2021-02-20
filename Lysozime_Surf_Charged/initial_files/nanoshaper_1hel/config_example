@@ -1,4 +1,4 @@
-Grid_scale = 0.58
+Grid_scale = 2.32
 Grid_perfil = 90.0
 XYZR_FileName = 1hel.xyzr
 Build_epsilon_maps = false
